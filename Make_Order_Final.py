@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#designed by Isaac Cheng
 
 dinner_menu = {"A餐干炒牛河": 65, "B餐星洲炒米": 60, "C餐陽州炒飯": 68, "D餐銀芽炒米粉": 55, "E餐蝦仁炒飯": 70}
 dinner_menu2 = {"A": 65, "B": 60, "C": 68, "D": 55, "E": 70}
