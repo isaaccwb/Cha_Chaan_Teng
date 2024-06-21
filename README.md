@@ -15,9 +15,9 @@ It is a python program where
 
 3: Using Vercel for frontend deployment
 
-4: Custom domain:
+4: Custom domain: cctmenu.isaaccheng.xyz
 
 Enjoy!
 
 Isaac
-2024
+Jun 2024
