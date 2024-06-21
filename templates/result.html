@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>訂單總結</title>
+</head>
+<body>
+    <h1>訂單總結</h1>
+    <p>餐點: {{ dish }}</p>
+    <p>餐點價格: ${{ dish_price }} 元</p>
+    {% if upgrade_price > 0 %}
+        <p>套餐價格: ${{ upgrade_price }} 元</p>
+        <p>飲品價格: ${{ drink_price }} 元</p>
+    {% endif %}
+    <h2>總共價格: ${{ total_price }} 元</h2>
+    <a href="/">返回</a>
+</body>
+</html>
