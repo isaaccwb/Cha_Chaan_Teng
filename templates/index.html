@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>點餐</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>今日想食乜9? 有 A 到 E 餐:</h1>
+        <form action="/order" method="post">
+            <div class="dish-selection">
+                {% for dish, price in menu.items() %}
+                    <div class="dish-item">
+                        <input type="radio" id="{{ dish }}" name="dish" value="{{ dish }}">
+                        <label for="{{ dish }}">{{ dish }} - ${{ price }}</label>
+                        <img src="{{ url_for('static', filename='images/' + dish.split('餐')[0] + '.jpeg') }}" alt="{{ dish }}" class="dish-image">
+                    </div>
+                {% endfor %}
+            </div>
+            <br>
+            <label>跟唔跟套餐？有老火湯有餐飲:</label><br>
+            <input type="radio" id="yes" name="upgrade" value="跟">
+            <label for="yes">跟</label><br>
+            <input type="radio" id="no" name="upgrade" value="唔跟">
+            <label for="no">唔跟</label><br>
+            <br>
+            <label>飲咩? 凍飲定熱飲?</label><br>
+            <input type="radio" id="cold" name="drink" value="凍飲">
+            <label for="cold">凍飲</label><br>
+            <input type="radio" id="hot" name="drink" value="熱飲">
+            <label for="hot">熱飲</label><br>
+            <br>
+            <input type="submit" value="提交">
+        </form>
+    </div>
+</body>
+</html>
