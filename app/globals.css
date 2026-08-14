@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/*
+ * 茶記落單 App — Design Tokens
+ * 對應 docs/PROJECT_PLAN.md 〈三、UI/美術方向 §2〉
+ * 核心邏輯:米白/奶茶色做底(唔用純白),紅做主強調,墨綠做次要強調,金做點綴。
+ */
+
+:root {
+  /* 品牌主色:招牌紅 / 茶記紅 */
+  --cct-red-50: #fdf2ee;
+  --cct-red-100: #fadcd3;
+  --cct-red-500: #e4432f;
+  --cct-red-600: #c8272c;
+  --cct-red-700: #9e1b1f;
+
+  /* 奶茶啡黃系(底色 & 次要強調) */
+  --cct-cream-50: #fbf3e3;
+  --cct-cream-100: #f3e4c8;
+  --cct-milktea-400: #d8a65c;
+  --cct-milktea-600: #b87a33;
+
+  /* 冰室墨綠(次要強調 / 例湯・老闆推介類 badge) */
+  --cct-green-600: #2f6b52;
+  --cct-green-800: #1b4d3e;
+
+  /* 格仔藍(職員後台次要色 / status 標籤) */
+  --cct-blue-700: #274472;
+
+  /* 霓虹青(凍飲語意色) */
+  --cct-teal-500: #1fa9a3;
+
+  /* 金邊(點綴線 / icon) */
+  --cct-gold-500: #d9a441;
+
+  /* 文字墨色(唔用純黑,帶少少啡調) */
+  --cct-ink-900: #2b2320;
+  --cct-ink-600: #5c4f49;
+
+  /* shadcn 慣用 token 映射 */
+  --background: var(--cct-cream-50);
+  --foreground: var(--cct-ink-900);
+  --card: var(--cct-cream-100);
+  --card-foreground: var(--cct-ink-900);
+  --primary: var(--cct-red-500);
+  --primary-hover: var(--cct-red-600);
+  --primary-foreground: #fff8f0;
+  --secondary: var(--cct-green-800);
+  --secondary-foreground: #fff8f0;
+  --accent: var(--cct-gold-500);
+  --accent-foreground: var(--cct-ink-900);
+  --muted: var(--cct-cream-100);
+  --muted-foreground: var(--cct-ink-600);
+  --border: #e8d9be;
+  --input: #e8d9be;
+  --ring: var(--cct-red-500);
+  --destructive: #a31515;
+  --destructive-foreground: #fff8f0;
+
+  /* 陰影 token — 貼紙感硬陰影,唔用泛用 soft SaaS shadow */
+  --shadow-sticker: 2px 2px 0 rgba(43, 35, 32, 0.15);
+  --shadow-glow: 0 0 12px rgba(228, 67, 47, 0.5);
+
+  --radius: 0.5rem;
+}
+
+/* 職員後台可以用暗色模式(廚房/夜更) — 只有喺 OS 未明確揀 light 先套用 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #1e1a17;
+    --foreground: #f3e4c8;
+    --card: #2b2420;
+    --card-foreground: #f3e4c8;
+    --muted: #2b2420;
+    --muted-foreground: #d8a65c;
+    --border: #3a2e26;
+    --input: #3a2e26;
+    --primary-foreground: #fff8f0;
+  }
+}
+
+/* 明確揀 dark 主題時(app 內 theme toggle,例如職員後台夜更掣)一樣套用 */
+:root[data-theme="dark"] {
+  --background: #1e1a17;
+  --foreground: #f3e4c8;
+  --card: #2b2420;
+  --card-foreground: #f3e4c8;
+  --muted: #2b2420;
+  --muted-foreground: #d8a65c;
+  --border: #3a2e26;
+  --input: #3a2e26;
+  --primary-foreground: #fff8f0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-cct-red-50: var(--cct-red-50);
+  --color-cct-red-100: var(--cct-red-100);
+  --color-cct-red-500: var(--cct-red-500);
+  --color-cct-red-600: var(--cct-red-600);
+  --color-cct-red-700: var(--cct-red-700);
+  --color-cct-green-600: var(--cct-green-600);
+  --color-cct-green-800: var(--cct-green-800);
+  --color-cct-teal-500: var(--cct-teal-500);
+  --color-cct-gold-500: var(--cct-gold-500);
+  --color-cct-blue-700: var(--cct-blue-700);
+
+  --font-display: var(--font-display-cjk), "Alfa Slab One", serif;
+  --font-heading-en: var(--font-alfa-slab), serif;
+  --font-sans: var(--font-noto-sans-hk), var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono-ui: var(--font-space-grotesk), system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* 貼紙感硬陰影 utility(卡片/badge 用) */
+.shadow-sticker {
+  box-shadow: var(--shadow-sticker);
+}
+.shadow-cct-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* 幼條格仔紋 — 淨係用喺 divider/empty-state 底紋,唔做滿版背景 */
+.cct-checker-strip {
+  height: 6px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--cct-green-800) 0 12px,
+    var(--cct-cream-50) 12px 24px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
