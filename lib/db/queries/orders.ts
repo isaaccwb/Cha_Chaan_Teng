@@ -12,7 +12,23 @@ export async function getOrderForGuest(orderId: string, guestToken: string) {
     .limit(1);
   if (!order) return null;
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
-  return { order, items };
+  if (items.length === 0) return { order, items: [] as Array<(typeof items)[number] & { options: (typeof orderItemOptions.$inferSelect)[] }> };
+  const options = await db
+    .select()
+    .from(orderItemOptions)
+    .where(
+      inArray(
+        orderItemOptions.orderItemId,
+        items.map((i) => i.id)
+      )
+    );
+  return {
+    order,
+    items: items.map((item) => ({
+      ...item,
+      options: options.filter((o) => o.orderItemId === item.id),
+    })),
+  };
 }
 
 /** 職員後台廚房顯示屏:攞返指定狀態嘅單(V1 用 polling) */
