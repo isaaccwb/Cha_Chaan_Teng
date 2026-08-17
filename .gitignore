@@ -22,3 +22,10 @@ npm-debug.log*
 
 # IDE
 .vscode/
+.env*
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# 唔關呢個 project 事嘅雜散檔案
+.Rhistory

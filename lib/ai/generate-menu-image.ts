@@ -96,7 +96,7 @@ export async function generateAndSaveMenuItemImage(
 
   let blobUrl: string;
   try {
-    const blob = await put(`menu-items/${item.id}-${Date.now()}.webp`, image.uint8Array, {
+    const blob = await put(`menu-items/${item.id}-${Date.now()}.webp`, Buffer.from(image.uint8Array), {
       access: "public",
       contentType: image.mediaType ?? "image/webp",
     });

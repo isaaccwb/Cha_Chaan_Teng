@@ -16,22 +16,28 @@ Push 之前記得諗清楚想點合併(直接 fast-forward main,定係開 PR rev
 
 ## 1. 首先要驗證嘅風險位(⚠️ 建議第一步就試,唔好留到最後)
 
-`lib/actions/order.ts`(客人落單)同 `lib/actions/staff-orders.ts`(職員改單)
-入面用到 `drizzle-orm/neon-http` 嘅 `db.transaction()` / 循序 insert。**呢個
-driver 對「插入一row、攞返佢個 id、用嚟插第二個表」呢種寫法嘅支援程度,喺
-冇連得到真 DB 嘅呢個 sandbox 入面冇辦法驗證過。**
+DB driver 而家用緊 **Supabase Postgres + `drizzle-orm/postgres-js`**(標準
+TCP session-based driver,唔係之前 evaluate 過但已經放棄嘅 Neon
+`neon-http`)。`lib/actions/order.ts`(客人落單)同
+`lib/actions/staff-orders.ts`(職員改單)入面用嘅 `db.transaction()` 有真正
+driver 支援,理論上風險已經細好多。但**呢個 sandbox 冇網絡/DB連接,實際運行
+結果都仲未實測過**,所以呢步都係要試。
+
+如果你用 **Supabase 嘅 pooled connection string**(dashboard 度個 "Transaction"
+mode,通常 port 6543),留意 `lib/db/index.ts` 已經加咗 `{ prepare: false }`
+—— pgbouncer transaction mode 唔支援 prepared statement,冇呢個 flag 會報錯。
+如果用返 "Session" mode 個直連 connection string(port 5432)就冇呢個限制。
 
 驗證方法:跑完第 4-5 步(migrate + seed)之後,即刻用網頁落一張真單
 (`/order` 頁揀嘢加落單 → 落單),睇吓:
 - 個 order 同佢啲 order_items/order_item_options 係咪都真係插咗落 DB(用
-  `npm run db:studio` 開 Drizzle Studio 睇)
+  `npm run db:studio` 開 Drizzle Studio 睇,或者直接開 Supabase dashboard →
+  Table Editor)
 - 落單流程有冇 throw error / 500
 
-如果 `createOrder` 嗰步報錯或者資料插漏咗,最大機會就係 `db.transaction()`
-喺 neon-http 度嘅行為同預期唔一致 —— fallback 做法係拆做唔用
-`db.transaction()` 包住嘅循序 `await` insert(犧牲返少少原子性,但對應
-PROJECT_PLAN §7 風險緩解嘅精神:V1 呢個 mock-payment prototype 唔追求
-嚴格 atomic rollback)。
+如果 `createOrder` 嗰步報錯,睇清楚錯誤訊息係咪同 connection string 個 mode
+(pooled vs session)有關;如果唔係,fallback 做法先至係拆做唔用
+`db.transaction()` 包住嘅循序 `await` insert。
 
 ## 2. Prerequisites
 
@@ -61,13 +67,20 @@ vercel link          # 連返去現有嗰個 project(cctmenu.isaaccheng.xyz 掛�
 vercel env pull .env.local
 ```
 
-如果個 project 重未有 Neon Postgres / Blob:
+如果個 project 重未有 Supabase Postgres / Blob:
 
 ```bash
-vercel integration add neon      # Vercel Marketplace provision Neon Postgres
+vercel integration add supabase  # Vercel Marketplace provision Supabase Postgres
 vercel integration add blob      # 或者 Vercel dashboard → Storage → Create Blob store
 vercel env pull .env.local       # provision 完再 pull 多次,攞返 DATABASE_URL / BLOB_READ_WRITE_TOKEN
 ```
+
+`vercel integration add supabase` 中途可能會轉去 browser 做 Supabase 帳號
+連結(呢種叫 "connectable" integration,CLI 揸唔到成個流程),跟住個 browser
+步驟做完再返嚟落下一句指令。Provision 完之後去 Supabase dashboard →
+Project Settings → Database,揀 **Transaction pooler**(port 6543)個
+connection string 做 `DATABASE_URL`(Vercel Functions 用 pooled connection
+啱啲,唔使自己管 connection 數量上限)。
 
 再生成 Auth secret:
 
@@ -82,7 +95,7 @@ npx auth secret     # 會自動幫你寫入 .env.local 嘅 AUTH_SECRET(冇嘅話
 
 ```bash
 npm run db:generate   # drizzle-kit 由 lib/db/schema.ts 產生 migration SQL
-npm run db:migrate    # 落去 Neon
+npm run db:migrate    # 落去 Supabase
 npm run db:seed       # 插入 5 個經典餐 + admin 帳號,終端機會印低 restaurant.id
 ```
 

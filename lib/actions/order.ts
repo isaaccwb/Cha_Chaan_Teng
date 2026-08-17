@@ -58,7 +58,14 @@ export async function createOrder(input: CreateOrderInput) {
   const db = getDb();
 
   // 逐項用 DB 現價重新計算(唔信任前端傳嚟嘅價/選項)
-  const preparedItems = [];
+  const preparedItems: Array<{
+    menuItem: NonNullable<Awaited<ReturnType<typeof getMenuItemById>>>;
+    options: Awaited<ReturnType<typeof getItemOptionsByIds>>;
+    quantity: number;
+    notes: string | null;
+    unitPrice: number;
+    lineTotal: number;
+  }> = [];
   for (const rawItem of input.items) {
     if (!rawItem.menuItemId || rawItem.quantity < 1) {
       throw new Error(errorCopy.orderFailed);
@@ -109,16 +116,12 @@ export async function createOrder(input: CreateOrderInput) {
 
   const guestToken = crypto.randomUUID();
 
-  // ⚠️ 待驗證(見 RUN-BOOK.md 第一項):drizzle-orm/neon-http 嘅 db.transaction()
-  // 用 Neon 嘅 HTTP batch transaction API,同傳統 session-based interactive
-  // transaction 唔完全一樣。呢度用咗 insert → .returning() → 再用嗰個 id
-  // 落下一個 insert 呢種「讀返上一步結果先落下一步」寫法,理論上 drizzle 官方
-  // 支援(neon-http transaction 入面嘅 query 係真係逐條送出、逐條攞返結果,
-  // 唔係一次過打晒包一齊送),但**未喺呢個 sandbox(冇網絡/DB連接)實測過**,
-  // 第一次連得住 DB 就要即刻用 seed 完嘅 menu 試落一張真單確認得。如果發現
-  // 唔work,fallback 做法係將呢個 transaction 拆做順序 await(唔用
-  // db.transaction 包住),接受 V1 呢個低風險 mock-payment prototype
-  // 唔追求嚴格 atomic rollback(對應商業計劃 §7 風險緩解嘅精神:V1 求穩唔求全)。
+  // db 用 drizzle-orm/postgres-js(見 lib/db/index.ts),係真正 session-based
+  // transaction,insert → .returning() → 再用嗰個 id 落下一個 insert 呢種
+  // 寫法有標準 driver 支援,唔似之前 evaluate 過嘅 neon-http(HTTP-only,冇
+  // 真正 multi-statement transaction)咁有風險。即使咁,呢個 sandbox 冇網絡/
+  // DB連接,呢段實際運行結果仍然未實測過 —— 第一次連得住 DB 就用 seed 完嘅
+  // menu 試落一張真單確認得(見 RUN-BOOK.md 第一項)。
   const { orderId, orderNumber } = await db.transaction(async (tx) => {
     const [order] = await tx
       .insert(orders)

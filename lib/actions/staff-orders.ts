@@ -7,9 +7,9 @@
  * 合法轉移一律用 lib/db/schema.ts 嘅 ORDER_STATUS_TRANSITIONS 做檢查,
  * 唔喺呢度另外定義一份 —— 果個先係 source of truth。
  *
- * 注意:getDb() 用嘅係 drizzle-orm/neon-http(單條 SQL 一個 HTTP call),
- * 呢個 driver 唔支援真正嘅多語句 transaction,所以下面用循序 await 嚟做
- * 「寫 order + 寫 history」,已經係呢個 driver 限制下最貼近原子性嘅做法。
+ * 注意:getDb() 用嘅係 drizzle-orm/postgres-js(標準 session-based Postgres
+ * driver,連 Supabase),支援真正嘅多語句 transaction,所以下面「寫 order +
+ * 寫 history」用 db.transaction() 包住,兩步一齊成功或者一齊 rollback。
  */
 
 import { eq } from "drizzle-orm";
@@ -64,16 +64,18 @@ export async function updateOrderStatus(
 
   const db = getDb();
 
-  await db
-    .update(orders)
-    .set({ status: nextStatus, updatedAt: new Date() })
-    .where(eq(orders.id, orderId));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(orders)
+      .set({ status: nextStatus, updatedAt: new Date() })
+      .where(eq(orders.id, orderId));
 
-  await db.insert(orderStatusHistory).values({
-    orderId,
-    fromStatus: currentStatus,
-    toStatus: nextStatus,
-    changedBy: staff.id,
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      fromStatus: currentStatus,
+      toStatus: nextStatus,
+      changedBy: staff.id,
+    });
   });
 
   revalidatePath("/admin/orders");

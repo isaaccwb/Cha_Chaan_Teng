@@ -69,7 +69,11 @@ export async function deleteMenuCategory(categoryId: string): Promise<ActionResu
 
 // ========== 品項 Menu Item ==========
 
-function parseItemForm(formData: FormData) {
+type ParsedItemForm =
+  | { ok: true; data: { categoryId: string; name: string; code: string | null; description: string | null; price: string } }
+  | { ok: false; error: string };
+
+function parseItemForm(formData: FormData): ParsedItemForm {
   const categoryId = String(formData.get("categoryId") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const codeRaw = String(formData.get("code") ?? "").trim();
@@ -77,11 +81,13 @@ function parseItemForm(formData: FormData) {
   const priceRaw = String(formData.get("price") ?? "").trim();
   const price = Number(priceRaw);
 
-  if (!categoryId) return { error: "揀返個分類先" };
-  if (!name) return { error: "品名唔可以空白" };
-  if (!priceRaw || Number.isNaN(price) || price < 0) return { error: "價錢要填啱,唔可以係負數" };
+  if (!categoryId) return { ok: false, error: "揀返個分類先" };
+  if (!name) return { ok: false, error: "品名唔可以空白" };
+  if (!priceRaw || Number.isNaN(price) || price < 0)
+    return { ok: false, error: "價錢要填啱,唔可以係負數" };
 
   return {
+    ok: true,
     data: {
       categoryId,
       name,
@@ -96,7 +102,7 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
   await requireStaffRole(["admin"]);
   const restaurantId = await getCurrentRestaurantId();
   const parsed = parseItemForm(formData);
-  if (parsed.error) return { success: false, error: parsed.error };
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   const db = getDb();
   await db.insert(menuItems).values({ restaurantId, ...parsed.data });
@@ -107,7 +113,7 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
 export async function updateMenuItem(itemId: string, formData: FormData): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
   const parsed = parseItemForm(formData);
-  if (parsed.error) return { success: false, error: parsed.error };
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   const db = getDb();
   await db
@@ -182,25 +188,29 @@ export async function getMenuItemForEdit(itemId: string) {
 
 // ========== 加料選項 Item Options(走青/走冰/跟套餐呢類) ==========
 
-function parseOptionForm(formData: FormData) {
+type ParsedOptionForm =
+  | { ok: true; data: { name: string; groupName: OptionGroup; priceDelta: string; isDefault: boolean } }
+  | { ok: false; error: string };
+
+function parseOptionForm(formData: FormData): ParsedOptionForm {
   const name = String(formData.get("name") ?? "").trim();
   const groupName = String(formData.get("groupName") ?? "其他") as OptionGroup;
   const priceDeltaRaw = String(formData.get("priceDelta") ?? "0").trim();
   const priceDelta = priceDeltaRaw === "" ? 0 : Number(priceDeltaRaw);
   const isDefault = formData.get("isDefault") === "on";
 
-  if (!name) return { error: "加料名唔可以空白" };
-  if (!optionGroupEnum.enumValues.includes(groupName)) return { error: "分組揀錯咗" };
-  if (Number.isNaN(priceDelta)) return { error: "加價要係數字(可以係 0 或者負數)" };
+  if (!name) return { ok: false, error: "加料名唔可以空白" };
+  if (!optionGroupEnum.enumValues.includes(groupName)) return { ok: false, error: "分組揀錯咗" };
+  if (Number.isNaN(priceDelta)) return { ok: false, error: "加價要係數字(可以係 0 或者負數)" };
 
-  return { data: { name, groupName, priceDelta: priceDelta.toFixed(2), isDefault } };
+  return { ok: true, data: { name, groupName, priceDelta: priceDelta.toFixed(2), isDefault } };
 }
 
 export async function createItemOption(itemId: string, formData: FormData): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
   const restaurantId = await getCurrentRestaurantId();
   const parsed = parseOptionForm(formData);
-  if (parsed.error) return { success: false, error: parsed.error };
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   const db = getDb();
   await db.insert(itemOptions).values({ restaurantId, menuItemId: itemId, ...parsed.data });
@@ -215,7 +225,7 @@ export async function updateItemOption(
 ): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
   const parsed = parseOptionForm(formData);
-  if (parsed.error) return { success: false, error: parsed.error };
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   const db = getDb();
   await db.update(itemOptions).set(parsed.data).where(eq(itemOptions.id, optionId));

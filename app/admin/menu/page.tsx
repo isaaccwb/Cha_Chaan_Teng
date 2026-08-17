@@ -104,7 +104,13 @@ export default async function AdminMenuPage() {
           <CardTitle>加新分類</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createMenuCategory} className="flex gap-2">
+          <form
+            action={async (formData) => {
+              "use server";
+              await createMenuCategory(formData);
+            }}
+            className="flex gap-2"
+          >
             <input
               name="name"
               placeholder="例如:粉麵飯"
@@ -123,7 +129,13 @@ export default async function AdminMenuPage() {
           <CardTitle>加新品項</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createMenuItem} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <form
+            action={async (formData) => {
+              "use server";
+              await createMenuItem(formData);
+            }}
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+          >
             <select name="categoryId" required className={INPUT_CLASS} defaultValue="">
               <option value="" disabled>
                 揀分類

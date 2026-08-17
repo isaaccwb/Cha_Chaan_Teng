@@ -43,7 +43,7 @@
 
 ## 執行摘要
 
-呢個項目由一個五分鐘就睇完嘅 Flask 練習 app 出發：一個 in-memory dict 存住 5 個餐、一張 HTML form 落單、冇 DB、冇登入、冇多用戶。V0 嘅價值淨係喺於「證明個落單邏輯行得通」——套餐加$10、凍飲加$6、熱飲加$3 呢啲計價規則寫死喺 code 度，部署喺 Vercel 用嘅係最原始嘅 `@vercel/python` + `vercel.json`。而家呢份企劃書要做嘅,係將呢個原型徹底重寫做 V1：一套用 Next.js App Router 全端起、Neon Postgres 做資料層、shadcn 做 UI、支援客人 guest 落單同職員/老闆登入後台嘅**可商業化、可以擺出去見真老闆真客人**嘅系統，而且由第一日就喺 schema 度留低 `restaurant_id`，為之後嘅多租戶 SaaS 鋪路。
+呢個項目由一個五分鐘就睇完嘅 Flask 練習 app 出發：一個 in-memory dict 存住 5 個餐、一張 HTML form 落單、冇 DB、冇登入、冇多用戶。V0 嘅價值淨係喺於「證明個落單邏輯行得通」——套餐加$10、凍飲加$6、熱飲加$3 呢啲計價規則寫死喺 code 度，部署喺 Vercel 用嘅係最原始嘅 `@vercel/python` + `vercel.json`。而家呢份企劃書要做嘅,係將呢個原型徹底重寫做 V1：一套用 Next.js App Router 全端起、Supabase Postgres 做資料層、shadcn 做 UI、支援客人 guest 落單同職員/老闆登入後台嘅**可商業化、可以擺出去見真老闆真客人**嘅系統，而且由第一日就喺 schema 度留低 `restaurant_id`，為之後嘅多租戶 SaaS 鋪路。
 
 呢次重寫嘅核心唔淨係「換技術棧」,更加係將原本得個雛型嘅產品,補齊一間真.茶記實際落地要有嘅嘢：走青飛沙走奶呢類客製化要做成結構化 modifier 而唔係得返 free text、最低消費同加一服務費要做成可設定嘅開關、訂單要有完整狀態機同歷史紀錄、老闆要有睇單改單同睇銷售嘅後台、餐牌相要用 AI 一致風格生成唔使自己影相。呢啲都係「一間茶記真係用得落」同「得個demo」之間嘅分水嶺。
 
@@ -71,7 +71,7 @@
 
 6. **`menu_items` 補一個 `image_prompt` 欄位**：AI 圖片生成 Prompt 套件 §4 第5點提醒生圖用嘅完整 prompt 應該存低方便追溯,但原本 DDL 冇呢欄。→ **已修正**：下面 §3.2/§3.3 已加入 `image_prompt TEXT` 欄位。
 
-除此之外,四份章節喺 V0→V1 嘅 5 個餐、加價規則（跟套餐+$10、凍飲+$6、熱飲+$3）、domain（`cctmenu.isaaccheng.xyz`）、GitHub repo、技術棧選擇（Next.js + Neon + shadcn + AI Gateway）、guest 唔登入 / 職員登入嘅雙軌權限模型上完全一致,冇再發現矛盾。
+除此之外,四份章節喺 V0→V1 嘅 5 個餐、加價規則（跟套餐+$10、凍飲+$6、熱飲+$3）、domain（`cctmenu.isaaccheng.xyz`）、GitHub repo、技術棧選擇（Next.js + Supabase + shadcn + AI Gateway）、guest 唔登入 / 職員登入嘅雙軌權限模型上完全一致,冇再發現矛盾。
 
 ---
 
@@ -148,7 +148,7 @@ App 唔係要炒晒啲伙記,係要畀老闆喺同一班人手下面,做多啲�
 | 項目 | 服務 | 估算月費(USD) | 備註 |
 |---|---|---|---|
 | Hosting + Functions | Vercel **Pro** plan(商業用途必需,Hobby plan 條款唔容許商業營運) | ~$20/月(基本座位費) | 呢個規模嘅 function invocation / bandwidth 用量大機會喺 Pro plan 隨附額度之內,爆額外用量都係幾蚊到十幾蚊水平 |
-| Database | Vercel Marketplace — **Neon Postgres** | $0(免費層,細規模) 至 ~$19/月(如需升級到入門付費層) | 單一茶記嘅單量、菜單、用戶(職員)資料量細,免費/入門層應該夠用好耐 |
+| Database | Vercel Marketplace — **Supabase Postgres** | $0(免費層,細規模) 至 ~$19/月(如需升級到入門付費層) | 單一茶記嘅單量、菜單、用戶(職員)資料量細,免費/入門層應該夠用好耐 |
 | AI 生圖 | **Vercel AI Gateway**(image generation,按用量計) | ~$1–5/月 | 唔係每張單都生圖,只係設置/更新菜單相先用到,一次過生20-30張相可能 $1-3,之後偶爾補一兩張,攤分落每個月成本好低 |
 | **合計估算** | | **約 US$25–45/月(約 HK$195–350/月)** | 小規模單店起步價 |
 
@@ -175,7 +175,7 @@ App 唔係要炒晒啲伙記,係要畀老闆喺同一班人手下面,做多啲�
 ### 6. Roadmap 分期
 
 #### **V1 —— 單一茶記 Prototype**(現階段)
-- Next.js App Router + Vercel Postgres(Neon)
+- Next.js App Router + Supabase Postgres
 - 客人 guest order(唔使登入),職員/老闆登入後台
 - 後台:睇單、改菜單、睇基本銷售
 - AI Gateway 生成一致風格嘅菜單相
@@ -271,7 +271,7 @@ lib/ai/menu-image-prompt.ts  # AI 生圖 prompt template,鎖死「茶餐廳風�
         │                       │                      │
         ▼                       ▼                      ▼
 ┌───────────────┐   ┌───────────────────────┐  ┌─────────────────────────┐
-│ Neon Postgres  │   │  Vercel AI Gateway     │  │   Vercel Blob            │
+│ Supabase Postgres  │   │  Vercel AI Gateway     │  │   Vercel Blob            │
 │ (Vercel        │   │  (OIDC auth,唔使自己  │  │  (存生成好嘅餐牌相       │
 │  Marketplace)  │   │   攞 provider key)     │  │   public access)         │
 │ Drizzle ORM    │   │  image generation      │  │  menu-items/{id}.webp    │
@@ -281,19 +281,19 @@ lib/ai/menu-image-prompt.ts  # AI 生圖 prompt template,鎖死「茶餐廳風�
 
 **資料流向重點**:
 - 生圖係**單向 pipeline**:老闆後台按「生成相片」→ Route Handler 叫 AI Gateway → 拎到 image bytes → 上傳去 Vercel Blob → 攞返 public URL → update `menu_items.image_url`。生成完之後前台睇到嘅永遠係 Blob URL,唔會即時再叫 AI(慳成本、慳 latency)。
-- 前台落單全程唔叫外部 API,淨係讀寫 Neon。
+- 前台落單全程唔叫外部 API,淨係讀寫 Supabase。
 
 ### 2. ORM 揀 Drizzle(唔用 Prisma) —— 理由
 
 | 考慮點 | Drizzle | Prisma |
 |---|---|---|
 | Serverless cold start | 冇 query engine binary,起機快 | 有 Rust engine binary,cold start 較重(除非用 Accelerate) |
-| 同 Neon HTTP driver 配合 | `drizzle-orm/neon-http` 官方一級支援,單條 SQL 一個 HTTP call,啱晒 Vercel Functions | 需要額外 Accelerate/connection pooling 先夠靚 |
+| 同 Postgres driver 配合 | `drizzle-orm/postgres-js` 配 Supabase 標準 TCP connection(pooled 用 pgbouncer transaction mode),官方一級支援 | 需要額外 Accelerate/connection pooling 先夠靚 |
 | Schema 表達方式 | TypeScript 寫 schema,靠近原生 SQL,migration 用 `drizzle-kit` 產生純 SQL 檔(方便 code review) | Schema DSL 自成一套,migration 係自家格式 |
 | Multi-tenant(V2 擴展) | 手寫 query 好易加 `.where(eq(table.restaurantId, ctx.restaurantId))`,冇隱藏 magic | 一樣做到,但 middleware/extension 寫法無 Drizzle直白 |
 | Bundle size / 依賴 | 細 | 相對重 |
 
-**結論:Drizzle + `@neondatabase/serverless` + `drizzle-orm/neon-http`**,用 `drizzle-kit` 出 migration SQL。
+**結論:Drizzle + `postgres`(postgres-js)+ `drizzle-orm/postgres-js`**,用 `drizzle-kit` 出 migration SQL。呢個 driver 用標準 session-based TCP 連接,支援真正嘅多語句 `db.transaction()`(唔似 Neon 個 `neon-http` HTTP-only driver 咁對 transaction 支援有保留 —— 呢個項目早期評估過 Neon,後尾因為開發者本身熟 Supabase 生態,加上 postgres-js 嘅 transaction 支援更直接,而改用 Supabase)。
 
 ### 3. 資料庫 Schema
 
@@ -309,7 +309,7 @@ restaurants 1─┬─* menu_categories 1─* menu_items 1─* item_options
                      └─* order_status_history
 ```
 
-#### 3.2 SQL DDL(Postgres / Neon)
+#### 3.2 SQL DDL(Postgres / Supabase)
 
 ```sql
 -- ========== 0. Enums ==========
@@ -496,16 +496,23 @@ export const menuItems = pgTable('menu_items', {
 `lib/db/index.ts` 用**懶初始化**(build time 未必有 `DATABASE_URL`):
 
 ```ts
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
+import postgres from 'postgres'
+import { drizzle } from 'drizzle-orm/postgres-js'
 import * as schema from './schema'
 
 let _db: ReturnType<typeof drizzle> | null = null
 export function getDb() {
-  if (!_db) _db = drizzle(neon(process.env.DATABASE_URL!), { schema })
+  if (!_db) {
+    const client = postgres(process.env.DATABASE_URL!, { prepare: false })
+    _db = drizzle(client, { schema })
+  }
   return _db
 }
 ```
+
+> `{ prepare: false }`:如果 `DATABASE_URL` 用 Supabase 嘅 pooled connection
+> string(pgbouncer transaction mode,port 6543),呢個 pool 唔支援 prepared
+> statement,關咗先安全。用直連 session mode(port 5432)就冇呢個問題。
 
 > 注意:唔好用 `Proxy` 包 db client 做 lazy init,會同某啲 library 嘅內部 introspection 衝突。呢個 plain function pattern 已經夠用。
 
@@ -746,7 +753,7 @@ V1 冇真銀行 / payment gateway,「結賬」淨係一個**手動確認**動作
      return process.env.DEFAULT_RESTAURANT_ID!   // 未來 V2 改做讀 headers().get('host') 再 lookup restaurants.domain
    }
    ```
-3. **Neon Postgres Row-Level Security(RLS)**:V2 可以喺 DB 層加 RLS policy,令每個 connection 只睇到自己 `restaurant_id` 嘅 row,做多一重防護(V1 唔使開,但 schema 已經預埋咗 column,開 RLS 唔使改表)。
+3. **Supabase Postgres Row-Level Security(RLS)**:V2 可以喺 DB 層加 RLS policy,令每個 connection 只睇到自己 `restaurant_id` 嘅 row,做多一重防護(V1 唔使開,但 schema 已經預埋咗 column,開 RLS 唔使改表)。
 4. **`staff_users` 已經係 per-restaurant**:即刻可以支援「A 茶記職員睇唔到 B 茶記啲單」,唔使另起 mapping table。
 5. **Auth 擴展**:V1 用 Auth.js + email/password 已經天然可以喺 `staff_users` 加 `restaurant_id`;V2 想加邀請制/多茶記管理,再評估搬 Clerk Organizations,`staff_users` 保留做 read model。
 6. **未來 billing/plan 表**:V2 要加 `restaurants.plan`、`subscriptions` 呢類表,直接掛喺已經存在嘅 `restaurants.id` 度,唔影響現有表結構。
@@ -791,7 +798,7 @@ export const config: VercelConfig = {
 
 | 變數 | 來源 | 說明 |
 |---|---|---|
-| `DATABASE_URL` | Vercel Marketplace(Neon)自動注入 | Drizzle 用 |
+| `DATABASE_URL` | Vercel Marketplace(Supabase)自動注入 | Drizzle 用 |
 | `AUTH_SECRET` | 手動生成(`npx auth secret`) | Auth.js JWT 簽名 |
 | `DEFAULT_RESTAURANT_ID` | 手動設定,等於 seed 出嚟嗰行 `restaurants.id` | V1 tenant 解析用 |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob 自動注入 | 上傳生成圖片 |
@@ -1358,14 +1365,14 @@ if a hand must appear, keep it partially cropped at frame edge, no visible face.
 - [ ] 在 `app/globals.css` / `tailwind.config` 寫入〈三、UI/美術方向〉§2.1 全部色板 CSS variables(含 dark mode block)
 - [ ] 用 `next/font` 載入四款字體:LXGW WenKai TC、Noto Sans HK、Alfa Slab One、Space Grotesk,設定對應 Tailwind font family token
 - [ ] 建立 `lib/copy/tone.ts`:集中管理所有市井文案常量(按鈕、空狀態、確認/錯誤訊息,內容照抄〈三、UI/美術方向〉§4 全部表格)
-- [ ] Vercel 專案 `vercel link` + `vercel env pull .env.local`,確認 Neon Postgres、Blob 已經透過 Marketplace provision
+- [ ] Vercel 專案 `vercel link` + `vercel env pull .env.local`,確認 Supabase Postgres、Blob 已經透過 Marketplace provision
 
 ### M1 — Setup Next.js + DB Schema
 
-- [ ] 安裝 Drizzle:`drizzle-orm`、`drizzle-kit`、`@neondatabase/serverless`
+- [ ] 安裝 Drizzle:`drizzle-orm`、`drizzle-kit`、`postgres`
 - [ ] 寫 `lib/db/schema.ts`:對應〈二、技術架構〉§3 全部 9 張表 + 4 個 enum(**記得包括整合企劃書時新增嘅欄位**:`restaurants.service_charge_enabled/percent`、`restaurants.min_spend_amount`、`menu_items.image_prompt`)
 - [ ] 寫 `lib/db/index.ts` 用懶初始化 `getDb()` pattern(唔用 Proxy)
-- [ ] 用 `drizzle-kit generate` 產生 migration SQL,run 落 Neon
+- [ ] 用 `drizzle-kit generate` 產生 migration SQL,run 落 Supabase
 - [ ] 寫 `lib/tenant.ts` 嘅 `getCurrentRestaurantId()`(V1 讀 `DEFAULT_RESTAURANT_ID` env)
 - [ ] 寫 `drizzle/seed.ts`:insert 一行 `restaurants`、5 個經典餐(A-E,價錢見附錄,**注意 C 餐正確名稱係「揚州炒飯」唔係「陽州炒飯」**)+ 對應 `item_options`(跟套餐+$10、凍飲+$6、熱飲+$3、走青/走冰等走料 modifier)
 - [ ] Run seed,確認 DB 內容同 V0 一致
@@ -1417,7 +1424,7 @@ if a hand must appear, keep it partially cropped at frame edge, no visible face.
 
 - [ ] 確認 `cctmenu.isaaccheng.xyz` domain 保留喺同一個 Vercel project(唔使重新設定 DNS)
 - [ ] 刪走舊 `vercel.json`,確認新 `vercel.ts` 生效
-- [ ] 設定必要 env vars:`DATABASE_URL`(Neon 自動注入)、`AUTH_SECRET`(`npx auth secret`)、`DEFAULT_RESTAURANT_ID`(seed 出嚟嗰行 restaurants.id)、`BLOB_READ_WRITE_TOKEN`(自動注入)
+- [ ] 設定必要 env vars:`DATABASE_URL`(Supabase 自動注入)、`AUTH_SECRET`(`npx auth secret`)、`DEFAULT_RESTAURANT_ID`(seed 出嚟嗰行 restaurants.id)、`BLOB_READ_WRITE_TOKEN`(自動注入)
 - [ ] 建立 `app/api/cron/cleanup-stale-orders/route.ts`:實作業務規則(pending 超過15分鐘未確認自動轉 cancelled,對應商業計劃 §7 風險緩解)
 - [ ] `vercel.ts` 內 crons 設定(`0 4 * * *` 或按需要調整頻率)
 - [ ] Preview deployment 全流程手動測試:客人落單 → 職員接單 → 出單 → mock 埋單 → completed
