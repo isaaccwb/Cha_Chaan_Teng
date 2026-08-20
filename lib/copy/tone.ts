@@ -13,6 +13,7 @@
  */
 
 export const buttonCopy = {
+  viewMenu: "睇餐牌落單",
   addToOrder: "嚟多樣!",
   confirmOrder: "落單啦",
   viewCart: "睇返張單",
