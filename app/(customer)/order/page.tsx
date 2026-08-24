@@ -11,7 +11,15 @@ import { emptyStateCopy } from "@/lib/copy/tone";
 /**
  * 客人落單頁 —— 單欄卡片 list + 橫向分類 chip + sticky bottom bar。
  * 對應 PROJECT_PLAN.md 〈三、UI/美術方向 §5.1〉。
+ *
+ * 呢個 page 冇用任何 dynamic API(getCurrentRestaurantId 淨係讀 env var),
+ * Next.js 預設會當佢係靜態頁面,build 嗰陣凍結晒 HTML,之後職員後台改
+ * 賣晒/落價/相片都唔會喺呢頁反映,要重新 deploy 先見到 —— 對落單頁嚟講
+ * 呢個絕對唔啱,強制行 dynamic rendering(同 app/admin/menu/page.tsx
+ * 用緊嘅做法一致)。
  */
+export const dynamic = "force-dynamic";
+
 export default async function OrderPage() {
   const restaurantId = await getCurrentRestaurantId();
   const db = getDb();

@@ -149,6 +149,9 @@ git push -u origin v1-nextjs-rewrite   # V1 rewrite,建議開 PR 畀自己 revie
 
 ## 10. 已知未實現 / 建議跟進(唔阻住上線,但要知)
 
+- ~~BLOB_READ_WRITE_TOKEN 未 provision~~ —— 已用 `vercel blob create-store`
+  開好 `cctmenu-blob`(public access),連咗去 project,Production/Preview/
+  Development 三邊都注入咗(2026-08-24)
 - **`app/admin/menu/page.tsx` 冇分類/加料選項嘅新增 UI 入口確認**(職員後台
   agent 冇喺回報講清楚 —— 上線前自己click 一次成個 menu 管理流程,確認建
   分類/建品項/加走料選項嘅表單都齊全)
