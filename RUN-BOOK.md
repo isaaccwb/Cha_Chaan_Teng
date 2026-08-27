@@ -194,7 +194,36 @@ git push -u origin v1-nextjs-rewrite   # V1 rewrite,建議開 PR 畀自己 revie
   註解解釋。`npm run lint` 同 `npm run build`(`rm -rf .next` 之後乾淨
   跑過)而家都通晒(2026-08-27)
 
-## 11. 之後點揾我(Claude)跟進
+## 11. Phase 1 硬化(2026-08-28,已完成)
+
+跟住 Phase 0(V1 上線)之後嘅第一輪可靠性工程,用 workflow(4 個任務並行實作
++ 每個任務一個 reviewer 覆核)一次過做晒:
+
+- **`CRON_SECRET`**:之前完全冇設,`/api/cron/cleanup-stale-orders` 個 route
+  自己有寫 auth check 但冇嘢好比對,即係實際上冇保護。已經幫三個環境都加
+  返(`vercel env add`),production curl 確認而家冇帶 secret 會 401。
+- **落單 rate limit**:客人落單全程冇登入,之前一個 tab loop 狂 call
+  `createOrder` 就可以洗版廚房 Kanban。新增 `lib/rate-limit.ts`(in-memory
+  sliding window,冇用 Redis,適合呢個 single-region 細規模 app),keyed 用
+  IP(冇 IP 就 fallback 用 guest_token),5 次/2 分鐘。
+- **Mobile UX 修正**(真係對住 375px viewport 檢查,唔係得個講字):sticky
+  header 長店名唔會再擠爆 greeting 文字、bottom sheet 加咗 iOS safe-area
+  padding、幾個細過 40px 嘅掂擊位(移除掣、加料 chip、加落單掣、分類 tab)
+  加大。
+- **Admin 表單 validation**:分類/品項名擋咗淨係得空格嘅輸入、加料選項表單
+  即時驗證(順手補咗一個原本已經存在嘅 bug:加選項失敗之前完全冇任何提示,
+  靜默吞咗)。
+- **客人流程 error boundary**:`app/(customer)/error.tsx` + `app/error.tsx`,
+  Server Component 拋錯唔會再見到 Next.js 冷冰冰畫面。**Reviewer 揪出一個
+  真 bug**:Next.js 嘅 `error.tsx` 唔會 catch 到自己 segment 嘅
+  `layout.tsx` 拋嘅錯,`app/(customer)/layout.tsx` 自己查 restaurant name
+  嗰段本身喺呢個 boundary 保護範圍外 —— 已經另外用 try/catch 包咗嗰段查詢,
+  DB 一時唔穩就 fallback 用返舊店名,唔會撞出去。
+
+`npm run lint` / `npm run build` 通過,`vercel deploy --prod` 完成,production
+curl 確認冇壞、cron endpoint 有 401 保護。
+
+## 12. 之後點揾我(Claude)跟進
 
 跑完呢份 RUN-BOOK 之後,將遇到嘅 build/runtime 錯誤原文貼返俾我,我可以喺
 呢個 sandbox 直接改 code(淨係唔可以幫你跑 `npm`/`vercel`/`git push` 呢類
