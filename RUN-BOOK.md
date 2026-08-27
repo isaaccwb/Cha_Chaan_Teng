@@ -16,12 +16,20 @@ Push 之前記得諗清楚想點合併(直接 fast-forward main,定係開 PR rev
 
 ## 1. 首先要驗證嘅風險位(⚠️ 建議第一步就試,唔好留到最後)
 
+> ✅ **已實測驗證(2026-08-27)**:sandbox 依家原來有網絡,喺
+> `vercel deploy` 出嚟嘅 preview URL 用瀏覽器真係落咗一張單(枱號
+> 7、干炒牛河 ×1),跳到 `/order/[orderId]` 訂單追蹤頁顯示「訂單編號
+> #7」;再直接用 `postgres-js` connect 返 pooled `DATABASE_URL` 查 DB,
+> 確認 `orders`(`table_number: '7', status: 'pending', total: '65.00'`)
+> 同 `order_items`(`item_name_snapshot: '干炒牛河', line_total: '65.00'`)
+> 都真係插咗落去,`db.transaction()` + pgbouncer transaction mode 冇報錯。
+> 下面呢段風險分析背景保留,但驗證結論已經係「得」。
+
 DB driver 而家用緊 **Supabase Postgres + `drizzle-orm/postgres-js`**(標準
 TCP session-based driver,唔係之前 evaluate 過但已經放棄嘅 Neon
 `neon-http`)。`lib/actions/order.ts`(客人落單)同
 `lib/actions/staff-orders.ts`(職員改單)入面用嘅 `db.transaction()` 有真正
-driver 支援,理論上風險已經細好多。但**呢個 sandbox 冇網絡/DB連接,實際運行
-結果都仲未實測過**,所以呢步都係要試。
+driver 支援,理論上風險已經細好多。
 
 如果你用 **Supabase 嘅 pooled connection string**(dashboard 度個 "Transaction"
 mode,通常 port 6543),留意 `lib/db/index.ts` 已經加咗 `{ prepare: false }`
