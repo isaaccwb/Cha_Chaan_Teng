@@ -10,13 +10,12 @@ import { createMenuCategory, createMenuItem, toggleAvailability } from "@/lib/ac
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { formatHKD } from "@/lib/utils";
 import { emptyStateCopy } from "@/lib/copy/tone";
 
 export const dynamic = "force-dynamic";
-
-const INPUT_CLASS =
-  "h-10 rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]";
 
 export default async function AdminMenuPage() {
   const restaurantId = await getCurrentRestaurantId();
@@ -111,12 +110,7 @@ export default async function AdminMenuPage() {
             }}
             className="flex gap-2"
           >
-            <input
-              name="name"
-              placeholder="例如:粉麵飯"
-              required
-              className={`${INPUT_CLASS} flex-1`}
-            />
+            <Input name="name" placeholder="例如:粉麵飯" required className="flex-1" />
             <Button type="submit" variant="secondary">
               新增
             </Button>
@@ -136,7 +130,7 @@ export default async function AdminMenuPage() {
             }}
             className="grid grid-cols-1 gap-3 sm:grid-cols-2"
           >
-            <select name="categoryId" required className={INPUT_CLASS} defaultValue="">
+            <Select name="categoryId" required defaultValue="">
               <option value="" disabled>
                 揀分類
               </option>
@@ -145,23 +139,15 @@ export default async function AdminMenuPage() {
                   {c.name}
                 </option>
               ))}
-            </select>
-            <input name="code" placeholder="代號(例如 A)" className={INPUT_CLASS} />
-            <input name="name" placeholder="品名" required className={INPUT_CLASS} />
-            <input
-              name="price"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="價錢"
-              required
-              className={INPUT_CLASS}
-            />
+            </Select>
+            <Input name="code" placeholder="代號(例如 A)" />
+            <Input name="name" placeholder="品名" required />
+            <Input name="price" type="number" step="0.01" min="0" placeholder="價錢" required />
             <textarea
               name="description"
               placeholder="賣點描述(俾 AI 生圖/落單頁參考)"
               rows={2}
-              className={`${INPUT_CLASS} h-auto py-2 sm:col-span-2`}
+              className="h-auto rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] sm:col-span-2"
             />
             <Button type="submit" className="sm:col-span-2">
               加落餐牌

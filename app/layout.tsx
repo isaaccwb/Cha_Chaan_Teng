@@ -43,7 +43,13 @@ export default function RootLayout({
           字體清單有冇收錄呢隻字嘅不確定性(build 嗰陣有網絡自然會 fetch 到)。
           --font-display-cjk 呢個 CSS variable 喺 globals.css 嘅 @theme 度已經
           set 好 fallback,就算字體一時未 load 到都唔會整頁散晒。
+
+          下面 eslint-disable:@next/next/no-page-custom-font 呢個 rule 淨係識
+          Pages Router 嗰句「要放喺 pages/_document.js」嘅寫法,冇認到 App
+          Router 嘅 app/layout.tsx 先係啱嘅擺放位置 —— 呢度已經係 root layout,
+          唔存在「淨係單頁 load 到」嗰個原本想擋嘅問題,係 false positive。
         */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap"
           rel="stylesheet"

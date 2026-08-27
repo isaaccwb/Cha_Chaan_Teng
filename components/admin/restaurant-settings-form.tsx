@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateRestaurantSettings } from "@/lib/actions/menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function RestaurantSettingsForm({
   initialServiceChargeEnabled,
@@ -62,27 +63,27 @@ export function RestaurantSettingsForm({
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">服務費百分比(%)</span>
-        <input
+        <Input
           type="number"
           min={0}
           step="0.5"
           disabled={!serviceChargeEnabled}
           value={serviceChargePercent}
           onChange={(e) => setServiceChargePercent(e.target.value)}
-          className="h-11 rounded-md border-[1.5px] border-[var(--input)] bg-[var(--background)] px-3 text-sm disabled:opacity-50"
+          className="h-11 bg-[var(--background)]"
         />
       </label>
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">最低消費金額($,留空 = 冇設最低消費)</span>
-        <input
+        <Input
           type="number"
           min={0}
           step="1"
           value={minSpendAmount}
           onChange={(e) => setMinSpendAmount(e.target.value)}
           placeholder="例如 50"
-          className="h-11 rounded-md border-[1.5px] border-[var(--input)] bg-[var(--background)] px-3 text-sm"
+          className="h-11 bg-[var(--background)]"
         />
       </label>
 

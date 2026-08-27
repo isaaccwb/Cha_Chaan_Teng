@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -55,13 +56,13 @@ export default async function StaffLoginPage({
               <label htmlFor="email" className="text-sm font-medium">
                 電郵
               </label>
-              <input
+              <Input
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="username"
                 required
-                className="h-11 rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                className="h-11"
                 placeholder="you@example.com"
               />
             </div>
@@ -69,13 +70,13 @@ export default async function StaffLoginPage({
               <label htmlFor="password" className="text-sm font-medium">
                 密碼
               </label>
-              <input
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-11 rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                className="h-11"
                 placeholder="••••••••"
               />
             </div>

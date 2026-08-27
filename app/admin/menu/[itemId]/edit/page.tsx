@@ -23,6 +23,8 @@ import { Fan, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import {
   createItemOption,
   deleteItemOption,
@@ -33,9 +35,6 @@ import {
   type OptionGroup,
 } from "@/lib/actions/menu";
 import { formatHKD } from "@/lib/utils";
-
-const INPUT_CLASS =
-  "h-10 rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]";
 
 const OPTION_GROUPS: OptionGroup[] = ["走料", "加料", "套餐飲品", "其他"];
 
@@ -235,43 +234,36 @@ export default function EditMenuItemPage({
               <label htmlFor="categoryId" className="text-sm font-medium">
                 分類
               </label>
-              <select
+              <Select
                 id="categoryId"
                 name="categoryId"
                 required
                 defaultValue={item.categoryId}
-                className={INPUT_CLASS}
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="code" className="text-sm font-medium">
                 代號
               </label>
-              <input id="code" name="code" defaultValue={item.code ?? ""} className={INPUT_CLASS} />
+              <Input id="code" name="code" defaultValue={item.code ?? ""} />
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="name" className="text-sm font-medium">
                 品名
               </label>
-              <input
-                id="name"
-                name="name"
-                required
-                defaultValue={item.name}
-                className={INPUT_CLASS}
-              />
+              <Input id="name" name="name" required defaultValue={item.name} />
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="price" className="text-sm font-medium">
                 價錢
               </label>
-              <input
+              <Input
                 id="price"
                 name="price"
                 type="number"
@@ -279,7 +271,6 @@ export default function EditMenuItemPage({
                 min="0"
                 required
                 defaultValue={item.price}
-                className={INPUT_CLASS}
               />
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -291,7 +282,7 @@ export default function EditMenuItemPage({
                 name="description"
                 rows={3}
                 defaultValue={item.description ?? ""}
-                className={`${INPUT_CLASS} h-auto py-2`}
+                className="h-auto rounded-md border-[1.5px] border-[var(--input)] bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
               />
             </div>
 
@@ -369,21 +360,20 @@ export default function EditMenuItemPage({
             onSubmit={handleAddOption}
             className="grid grid-cols-1 gap-2 border-t-[1.5px] border-[var(--border)] pt-4 sm:grid-cols-4"
           >
-            <select name="groupName" required defaultValue="其他" className={INPUT_CLASS}>
+            <Select name="groupName" required defaultValue="其他">
               {OPTION_GROUPS.map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
               ))}
-            </select>
-            <input name="name" placeholder="例如:走青" required className={INPUT_CLASS} />
-            <input
+            </Select>
+            <Input name="name" placeholder="例如:走青" required />
+            <Input
               name="priceDelta"
               type="number"
               step="0.01"
               placeholder="加價(可負可0)"
               defaultValue="0"
-              className={INPUT_CLASS}
             />
             <Button type="submit" variant="secondary">
               加落去

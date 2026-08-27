@@ -152,23 +152,31 @@ git push -u origin v1-nextjs-rewrite   # V1 rewrite,建議開 PR 畀自己 revie
 - ~~BLOB_READ_WRITE_TOKEN 未 provision~~ —— 已用 `vercel blob create-store`
   開好 `cctmenu-blob`(public access),連咗去 project,Production/Preview/
   Development 三邊都注入咗(2026-08-24)
-- **`app/admin/menu/page.tsx` 冇分類/加料選項嘅新增 UI 入口確認**(職員後台
-  agent 冇喺回報講清楚 —— 上線前自己click 一次成個 menu 管理流程,確認建
-  分類/建品項/加走料選項嘅表單都齊全)
-- **冇「職員改自己密碼」功能** —— admin 帳號密碼而家淨係喺 seed 嗰陣設定一次,
-  想改要直接落 DB update `staff_users.password_hash`(用 bcrypt hash),或者
-  之後加返一個「改密碼」頁
-- **`components/ui/input.tsx` / `select.tsx` 未抽做共用 primitive** —— 職員
-  後台表單而家用緊手寫嘅原生 input/select(有跟色板),日後如果要再加表單,
-  值得抽出嚟做返 shared component
-- **`lucide-react` 嘅 `Fan` icon 名有冇冇跟版本改咗** —— `npm install` 完
-  第一次 `npm run build` 順便肉眼確認吓 admin 生圖按鈕嗰粒 icon 有冇 build 錯
-- **LXGW WenKai TC 字體**用 `<link>` 叫 Google Fonts CSS2 API(見
-  `app/layout.tsx`),冇網絡驗證過個 font family 名同 Google Fonts 個 catalog
-  完全一致 —— 本機跑得起嗰陣留意吓標題字得唔得手寫楷書感,唔係就换個字體名
-  再試
+- ~~`app/admin/menu/page.tsx` 冇分類/加料選項嘅新增 UI 入口確認~~ ——
+  已核實:建分類、建品項(`/admin/menu`)、加走料選項(`/admin/menu/[itemId]/edit`)
+  三個表單都齊全,`npm run build` 已通過(2026-08-26)
+- ~~冇「職員改自己密碼」功能~~ —— 已加 `lib/actions/staff.ts` 嘅
+  `changeOwnPassword`(用 `auth()` 攞返而家登入緊嗰個人,驗返舊密碼先准改,
+  唔靠傳 id 過嚟以免改到第二個人)+ `components/admin/change-password-form.tsx`,
+  掛咗喺 `/admin/settings` 度,admin/staff 兩種角色都見得到(2026-08-26)
+- ~~`components/ui/input.tsx` / `select.tsx` 未抽做共用 primitive~~ ——
+  已抽出嚟,原本四處手寫同一串 class name 嘅地方(`admin/menu` 兩頁、
+  `login` 頁、`restaurant-settings-form.tsx`)都改用返呢兩個 primitive(2026-08-26)
+- ~~`lucide-react` 嘅 `Fan` icon 名有冇跟版本改咗~~ —— `npm run build` 已通過,
+  icon 冇 build 錯(2026-08-26)
+- ~~LXGW WenKai TC 字體~~ —— 已用 `curl` 叫過 Google Fonts CSS2 API,
+  `font-family: 'LXGW WenKai TC'` 同 `app/layout.tsx` 寫嘅名完全一致,
+  有真正回到 `.ttf` 檔案(2026-08-26)
 - **`/order-old` redirect**(`vercel.ts`)純粹係對應 V0 舊 path 嘅友善轉址,
-  V0 冇呢條 path 都冇所謂,冇用可以刪走
+  V0 冇呢條 path 都冇所謂,冇用可以刪走 —— 留低唔郁(未見有壞處)
+- ~~`npm run lint` 冇 `eslint.config.js`,ESLint v9 一行都跑唔到~~ ——
+  已加 `eslint.config.mjs`(用 `FlatCompat` 包 `eslint-config-next`,
+  跟 Next.js 官方 scaffold 寫法),順手修埋跑出嚟嘅 2 個 finding:
+  `next-env.d.ts`(自動生成、明文話唔好手動改嗰隻)加入 ignore 清單;
+  `app/layout.tsx` 個 `@next/next/no-page-custom-font` warning 係 rule
+  唔識 App Router 嘅 false positive,加咗 `eslint-disable-next-line` +
+  註解解釋。`npm run lint` 同 `npm run build`(`rm -rf .next` 之後乾淨
+  跑過)而家都通晒(2026-08-27)
 
 ## 11. 之後點揾我(Claude)跟進
 
