@@ -1157,156 +1157,323 @@ cha-chaan-teng/
 ## 四、AI 圖片生成 Prompt 套件
 
 > 供 Vercel AI Gateway 圖片生成使用;實際 model id 以 implementation 時 Gateway dashboard 揀到嘅為準(見〈編輯註記〉第5點)。
+>
+> **2026-08-28 大幅重寫**:舊版 style anchor 寫「professional food photography...
+> DSLR quality...soft natural window light」,實測生出嚟成套相太靚太乾淨、太
+> 一式一樣,似西式雜誌/連鎖店 catalog,唔似真.香港茶記(用戶反饋原話:
+> 「太假一式一樣」)。下面新版刻意反過來,寫成「真.茶記客人隨手影嘅相」,
+> 用光管冷光、舊 Formica/不鏽鋼枱面、有崩邊嘅美耐皿碟呢類貼地細節取代乾淨
+> 專業攝影棚感;每款菜式仲各自指定「Surface / Angle」(3 種表面 × 2 種角度
+> 輪流分配,見 §1/§2 逐款),先至令成套相真係有變化 —— 單靠喺 style anchor
+> 度寫句「vary background」係冇用嘅,每次生圖係獨立 call,個 model 唔知道
+> 第二張用過乜嘢。同時因為 Vercel AI Gateway 而家要求帳戶要有信用卡先俾生圖
+> (見 RUN-BOOK.md / Obsidian 記錄),完整可直接複製落其他生圖工具用嘅 16+2
+> 個 compiled prompt 已經另外生成落 `docs/ai-image-prompts.md`(由
+> `lib/ai/menu-image-prompt.ts` + `lib/ai/image-prompts.ts` 直接生成,呢兩個
+> code 檔案先係 source of truth)。
 
 ### 0. Style Anchor(每張相都要用)
 
-呢段係「共通句」,负责確保成套相睇落係同一間茶記、同一個攝影師影出嚟,唔會七國咁亂。**寫法:放喺每條 dish-specific prompt 前面,再喺後面加返 negative/consistency 提示。**
+呢段係「共通句」,负责確保成套相睇落係同一間茶記、同一個攝影師影出嚟,唔會七國咁亂,但**唔強迫每張相用一模一樣嘅背景/角度**(嗰個位交返俾逐條 dish prompt 自己嘅 Surface/Angle 指定)。**寫法:放喺每條 dish-specific prompt 前面,再喺後面加返 negative/consistency 提示。**
 
 ```
 STYLE ANCHOR (prepend to every prompt):
-Professional food photography for a Hong Kong cha chaan teng (茶餐廳) menu.
-Top-down 45-degree overhead angle, shot on a 50mm lens, shallow depth of field (f/2.8),
-food served on a classic white melamine round plate with thin red or green rim
-(the plate design must stay identical across all dishes in this set).
-Background: weathered wood-grain formica tabletop in warm honey-brown tone,
-slightly worn at the edges, authentic old-school Hong Kong diner texture.
-Lighting: soft natural window light from the upper-left, warm color temperature (3200K-4000K),
-gentle shadows, a little steam rising off hot food for freshness,
-subtle glossy highlights on sauce/oil to show texture.
-Color grading: warm nostalgic tone, slightly desaturated retro film look,
-like a photo from a 1990s-2000s Hong Kong diner menu, not overly saturated or "clean commercial."
-Small authentic props allowed at frame edges (chopsticks resting on a rest, a paper napkin,
-a small dish of chili oil) but never covering the main dish.
-Camera: sharp focus on food, background softly blurred at edges,
-photorealistic, DSLR quality, 4K detail, no text, no watermark, no logo, no hands, no people.
+Amateur-style photography of real Hong Kong cha chaan teng (茶餐廳) food — the
+look of an actual customer's phone or old compact-camera snapshot taken inside a
+real old-school Hong Kong diner, NOT a polished professional food-photography
+shoot. This must NOT look like a Western restaurant menu, a food magazine
+spread, or a clean commercial catalog photo.
 
-NEGATIVE PROMPT (apply to all): blurry, low quality, cartoon, illustration, 3D render,
-plastic-looking food, western plating style, minimalist white background,
-studio softbox lighting, text overlay, watermark, logo, extra utensils cluttering frame,
-distorted plate shape, inconsistent plate design.
+Lighting: harsh, flat overhead fluorescent tube lighting (white-to-slightly-green
+cast, roughly 5000-6500K), sometimes mixed with warm incandescent wall light
+bleeding in from one side — a slightly mismatched, unglamorous color temperature
+typical of a real cha chaan teng, not soft golden-hour window light. Small hot
+spots of overexposure on shiny sauce/oil are fine and expected; shadows should be
+a bit harsh and short, not moody or dramatic.
+
+Tableware: simple, well-used white melamine plates/bowls with a thin green or
+red rim, occasional small chips or a faint yellowed stain near the rim from years
+of use — same general plate family across the set, but each one allowed its own
+small imperfection rather than looking brand-new and identical.
+
+Authentic clutter allowed at frame edges (never covering the dish itself): a
+metal cup holding a couple of disposable wooden chopsticks, a small stained
+saucer with a chili-oil or soy-sauce drip mark, a roll or box of thin paper
+napkins (a near-universal fixture on every cha chaan teng table), a laminated
+numbered table tag, a slightly tarnished stainless-steel spoon.
+
+Camera & framing: shot like a real compact camera or phone snapshot — mostly
+deep focus rather than a creamy shallow-DOF blur, framed a little casually and
+slightly off-center, as if someone just set the dish down and snapped it before
+eating, not a perfectly centered studio composition. No visible hands, arms,
+faces, text, watermark, or logo.
+
+Color grading: warm but slightly flat and a touch undersaturated, with a hint of
+fluorescent green-cyan cast creeping into the highlights — like a real photo
+from an old Hong Kong cha chaan teng taken on an ordinary digital camera around
+2005-2012, not a curated "artsy desaturated film" look and not an oversaturated
+glossy commercial shot.
+
+The specific table surface and camera angle for this dish are given below in
+the DISH section (Surface / Angle line) — follow that, not a fixed default,
+so the surface and framing actually differ from one dish to the next.
+
+NEGATIVE PROMPT (apply to all): professional studio food photography, DSLR bokeh,
+shallow depth of field, soft golden-hour window light, minimalist clean background,
+white seamless backdrop, Western fine-dining plating, perfectly symmetrical
+composition, overly polished glossy "stock photo" look, magazine-spread lighting,
+cartoon, illustration, 3D render, CGI, plastic-looking food, text overlay,
+watermark, logo, brand name, visible price-tag text, hands, arms, faces,
+blurry or out-of-focus main dish, distorted plate shape, brand-new pristine
+tableware.
 ```
 
 > 用法:`FULL_PROMPT = STYLE_ANCHOR + "\n\nDISH:\n" + dishSpecificPrompt + "\n\n" + NEGATIVE_PROMPT`
+>
+> 完整版(連埋所有 16 款品項 + 2 個 bonus 嘅 compiled full prompt)見
+> `docs/ai-image-prompts.md`,下面 §1/§2 淨係列返每款嘅 dish-specific 部分做
+> 參考,唔重複貼成個 STYLE_ANCHOR。
 
-### 1. 現有 5 個餐——生圖 Prompt
+### 1. 常餐/套餐分類 —— 生圖 Prompt(A-E)
+
+每款開首嘅 `Surface / Angle:` 一行對應 §0 講嘅「唔靠 style anchor 講廢話,逐條
+prompt 自己指定表面/角度」做法,3 種表面(舊 Formica 枱 / 不鏽鋼枱 / 紅米粒
+terrazzo 櫃枱)+ 2 種角度(elevated 45° / near-top-down 70-75°)人手輪流分配。
 
 #### A餐 干炒牛河 ($65)
 ```
-DISH: A large plate of "gon chau ngau ho" (Cantonese dry-fried flat rice noodles with beef).
-Wide flat rice noodles (hor fun) stir-fried until slightly charred with visible wok hei
-(smoky black char marks on noodle edges), tossed with tender sliced beef strips
-seared to medium, silver bean sprouts, sliced spring onion, and a few strands of yellow chives,
-glistening with dark soy sauce sheen. The noodles should look slightly separated and glossy,
-not clumped, with visible char spots proving wok-fried technique.
-Steam gently rising. Plate filled generously, mounded slightly in the center.
+DISH: Surface / Angle: worn honey-brown Formica tabletop with a faded, slightly
+crumpled disposable paper placemat printed with barely-legible Chinese text;
+elevated ~45-degree angle.
+A large plate of "gon chau ngau ho" (Cantonese dry-fried flat rice noodles with
+beef). Wide flat rice noodles (hor fun) stir-fried until slightly charred with
+visible wok hei (smoky black char marks on noodle edges), tossed with tender
+sliced beef strips seared to medium, silver bean sprouts, sliced spring onion,
+and a few strands of yellow chives, glistening with dark soy sauce sheen. The
+noodles look slightly separated and glossy, not clumped, with visible char
+spots proving wok-fried technique, piled generously and a little messily onto
+a well-used plate with a faint yellowed rim stain. A metal cup of disposable
+wooden chopsticks sits at the frame edge.
 ```
 
 #### B餐 星洲炒米 ($60)
 ```
-DISH: A plate of "Singapore-style fried rice vermicelli" (星洲炒米).
-Thin rice vermicelli noodles stir-fried golden-yellow with curry powder,
-mixed with small pink shrimp, thin egg ribbons, diced red and green bell pepper,
-bean sprouts, and shredded barbecue pork (char siu) strips.
-Noodles should look light and separated (not oily/clumped), vivid turmeric-yellow color
-from curry powder, with visible small flecks of red pepper and green scallion for contrast.
-Slight glossy sheen from oil, a few shrimp visible on top for appetite appeal.
+DISH: Surface / Angle: scratched brushed stainless-steel table with dull reflections;
+near-top-down ~75-degree angle.
+A plate of "Singapore-style fried rice vermicelli" (星洲炒米). Thin rice
+vermicelli noodles stir-fried golden-yellow with curry powder, mixed with small
+pink shrimp, thin egg ribbons, diced red and green bell pepper, bean sprouts,
+and shredded barbecue pork (char siu) strips. Noodles look light and separated
+(not oily/clumped), vivid turmeric-yellow color from curry powder, with visible
+small flecks of red pepper and green scallion for contrast, a slight glossy
+sheen from oil catching the flat fluorescent light overhead. A small chipped
+saucer of chili oil with a drip mark sits just outside the frame's edge.
 ```
 
 #### C餐 揚州炒飯 ($68)
 ```
-DISH: A plate of "Yeung Chow fried rice" (揚州炒飯) — the classic Cantonese fried rice.
-Fluffy individually-separated white rice grains stir-fried with visible diced ingredients:
-pink char siu (barbecue pork) cubes, pink shrimp, diced carrot, green peas,
-diced egg (scrambled and chopped), and diced spring onion — all colors evenly distributed
-through the rice for a colorful confetti look. Rice should look light, dry, and fluffy
-(not wet or greasy), with a faint wok-fried sheen. Mounded into a small dome shape on the plate.
+DISH: Surface / Angle: red-and-cream speckled terrazzo/laminate counter; elevated
+~45-degree angle.
+A plate of "Yeung Chow fried rice" (揚州炒飯) — the classic Cantonese fried
+rice. Fluffy individually-separated white rice grains stir-fried with visible
+diced ingredients: pink char siu (barbecue pork) cubes, pink shrimp, diced
+carrot, green peas, diced egg (scrambled and chopped), and diced spring onion —
+colors scattered a little unevenly through the rice, not an overly perfect
+confetti pattern. Rice looks light and dry with a faint wok-fried sheen,
+mounded slightly off-center on a plate with a small visible chip at the rim.
+A laminated numbered table tag rests at the frame edge.
 ```
 
 #### D餐 銀芽炒米粉 ($55)
 ```
-DISH: A plate of "silver bean sprout fried rice vermicelli" (銀芽炒米粉).
-Very thin white rice vermicelli noodles stir-fried simply with fresh silver bean sprouts
-(mung bean sprouts with tails removed, extra crisp and pale), shredded egg,
-and a few strands of chive, very light pale color (minimal soy sauce, mostly white/translucent
-noodles), showing an elegant minimalist "poor man's noodle" look — clean, light, slightly wet-glossy.
-Bean sprouts should look fresh and crunchy, scattered generously on top for texture contrast.
+DISH: Surface / Angle: worn honey-brown Formica tabletop; near-top-down ~75-degree
+angle.
+A plate of "silver bean sprout fried rice vermicelli" (銀芽炒米粉). Very thin
+white rice vermicelli noodles stir-fried simply with fresh silver bean sprouts
+(mung bean sprouts with tails removed, extra crisp and pale), shredded egg, and
+a few strands of chive — very light in color (minimal soy sauce, mostly
+white/translucent noodles), an unglamorous "poor man's noodle" look under the
+flat overhead fluorescent light, slightly wet-glossy rather than styled. Bean
+sprouts scattered generously, a little unevenly, on top. A box of thin paper
+napkins sits softly out of focus at the frame edge.
 ```
 
 #### E餐 蝦仁炒飯 ($70)
 ```
-DISH: A plate of "shrimp fried rice" (蝦仁炒飯).
-Fluffy white fried rice studded generously with plump pink-orange cooked shrimp
-(shrimp larger and more prominent than in Yeung Chow rice — shrimp is the star),
-scrambled egg pieces, diced spring onion, rice grains light and separated with a faint
-translucent egg-coating sheen (egg-fried rice style, glossy not greasy).
-6-8 whole shrimp visible arranged attractively across the top of the rice mound.
+DISH: Surface / Angle: scratched brushed stainless-steel table; elevated ~45-degree
+angle.
+A plate of "shrimp fried rice" (蝦仁炒飯). Fluffy white fried rice studded
+generously with plump pink-orange cooked shrimp (larger and more prominent
+than in Yeung Chow rice — shrimp is the star), scrambled egg pieces, diced
+spring onion, rice grains light and separated with a faint translucent
+egg-coating sheen. 6-8 whole shrimp arranged a little unevenly across the top
+of the rice mound, catching a small overexposed highlight from the fluorescent
+tube overhead. A tarnished stainless-steel spoon rests at the plate's edge.
 ```
 
-### 2. 擴充經典港式冰室/茶記 Item(建議加落 menu 令個 app 睇落更豐富)
+### 2. 飲品 / 三文治多士 / 小食甜品 / 湯麵分類 —— 生圖 Prompt(F-P,2026-08-27 加落 menu)
 
-#### 凍奶茶 (Iced Hong Kong Milk Tea)
+#### F. 凍奶茶 ($22)
 ```
-DISH: A tall glass of iced Hong Kong-style milk tea (凍奶茶), served in a classic
-thick clear glass with condensation droplets on the outside, deep reddish-brown tea color,
-ice cubes visible through the glass, a thin straw, served on a small saucer.
-Milk tea should look rich and opaque-brown (not pale), slight creamy swirl visible at the top
-where milk hasn't fully mixed. Background same wood table, water condensation ring under glass.
-```
-
-#### 熱奶茶 (Hot Hong Kong Milk Tea)
-```
-DISH: A white ceramic cup (classic diner style, slightly thick rim) of hot Hong Kong milk tea,
-steam visibly rising, rich reddish-brown color, served on a matching white saucer with
-a small metal teaspoon resting beside it. Sugar packet or condensed milk canister
-optionally softly blurred in the background corner.
+DISH: Surface / Angle: red-and-cream speckled terrazzo/laminate counter; elevated
+~45-degree angle showing the full glass profile.
+A tall glass of iced Hong Kong-style milk tea (凍奶茶), served in a plain thick
+clear glass (not fancy stemware) with condensation droplets running down the
+outside and pooling on a small stained saucer underneath, deep reddish-brown
+tea color, ice cubes visible through the glass, a slightly bent disposable
+straw. Milk tea looks rich and opaque-brown, a faint creamy swirl visible at
+the top where milk hasn't fully mixed. Fluorescent overhead light creates a
+small hot highlight on the glass surface rather than a soft glow.
 ```
 
-#### 蛋撻 (Egg Tart)
+#### G. 熱奶茶 ($20)
 ```
-DISH: Three freshly-baked Hong Kong egg tarts (蛋撻) arranged on the melamine plate,
-golden flaky crumbly pastry shell (visible layered lamination texture at the edges),
-smooth glossy pale-yellow egg custard filling with a slight caramelized sheen on top,
-still slightly warm looking. Arranged in a small triangle cluster, one tart slightly
-tilted to show the flaky side wall texture.
-```
-
-#### 菠蘿油 (Pineapple Bun with Butter)
-```
-DISH: A pineapple bun (菠蘿包) sliced open with a thick slab of cold butter inserted
-in the middle, butter slightly melting from the bread's warmth. Bun top should show
-the signature golden-brown crackled "pineapple skin" crust texture (cookie-like crust
-with a grid crack pattern), soft white bread interior visible at the sides.
-Served on the melamine plate, a few crumbs scattered naturally around it.
+DISH: Surface / Angle: worn honey-brown Formica tabletop with a faded paper placemat;
+elevated ~45-degree angle.
+A plain white ceramic cup (classic diner style, slightly thick rim, a faint
+tea-stain ring visible on the inside near the top) of hot Hong Kong milk tea,
+steam visibly rising under the flat fluorescent light, rich reddish-brown
+color, served on a mismatched slightly chipped saucer with a tarnished small
+metal teaspoon resting beside it. A sugar packet or condensed-milk canister
+sits a little carelessly in the background, softly out of focus.
 ```
 
-#### 楊枝甘露 (Mango Pomelo Sago)
+#### H. 檸檬茶 ($20)
 ```
-DISH: A dessert bowl (not the round dinner plate — use a simple white glass dessert bowl instead)
-of mango pomelo sago (楊枝甘露), thick creamy pale-orange mango puree base,
-visible chunks of fresh diced mango, translucent white sago pearls, pomelo (grapefruit) sacs
-scattered on top, a mint leaf garnish optional. Glossy, chilled, appetizing sheen on the surface,
-served with a small spoon resting in the bowl.
-```
-
-#### 常餐 (Set Breakfast: Ham & Egg Sandwich + Milk Tea + Toast)
-```
-DISH: A full "set meal" (常餐) tray shot — same overhead 45-degree angle but wider frame
-to fit multiple items on the wood table: a ham-and-fried-egg sandwich (火腿煎蛋治) cut diagonally
-in half showing the fried egg yolk and ham layer, a slice of Hong Kong-style toast with
-kaya/butter or condensed milk on a side plate, and a cup of hot milk tea steaming beside it.
-All items arranged naturally as if on a real breakfast tray, not perfectly symmetrical.
+DISH: Surface / Angle: scratched brushed stainless-steel table; elevated ~45-degree
+angle showing the full glass profile.
+A tall glass of Hong Kong-style lemon tea (檸檬茶) in the same plain thick
+clear glass style as the milk tea, amber-golden tea color (lighter and more
+transparent than milk tea, no milk), 3-4 thin lemon slices floating and
+pressed against the glass wall, ice cubes visible, a slightly bent straw,
+condensation droplets on the glass exterior pooling on a small stained saucer.
+Overhead fluorescent light gives a slightly cool-green highlight on the glass.
 ```
 
-#### 絲襪奶茶沖茶動作 (Silk-Stocking Milk Tea Pouring Action Shot)
+#### I. 鴛鴦 ($22)
 ```
-DISH: Action shot of Hong Kong "silk stocking" milk tea being poured/pulled between
-two metal jugs held high apart, creating a long visible stream of reddish-brown tea
-with light foam/bubbles forming, motion-frozen mid-pour, droplets visible in the air.
-A cloth tea sock (絲襪) strainer visible resting on a jug spout in the background.
-This shot breaks from the standard overhead-plate framing — use a dynamic slightly-lower
-side angle instead, but keep the same warm lighting and wood-table background for consistency.
-NOTE: exclude hands/arms from frame if possible — focus on the jugs and tea stream only;
-if a hand must appear, keep it partially cropped at frame edge, no visible face.
+DISH: Surface / Angle: red-and-cream speckled terrazzo/laminate counter; elevated
+~45-degree angle.
+A plain white ceramic cup of yuenyeung (鴛鴦, Hong Kong coffee-milk-tea blend),
+same well-used diner cup-and-saucer style as the hot milk tea, but the liquid
+looks slightly darker and more matte than pure milk tea (a coffee undertone
+visible at the surface), steam rising under the flat fluorescent light, a
+tarnished small metal teaspoon resting on the chipped saucer beside the cup.
+```
+
+#### J. 餐蛋治 ($28)
+```
+DISH: Surface / Angle: worn honey-brown Formica tabletop; near-top-down ~70-degree
+angle.
+A classic Hong Kong luncheon meat and fried egg sandwich (餐蛋治), white
+sandwich bread lightly toasted, crusts trimmed off, cut diagonally in half and
+stacked a little unevenly to show the cross-section: a thick slice of pan-fried
+luncheon meat (SPAM-style, browned crispy edges) and a fried egg with a
+slightly runny yolk peeking out, a thin smear of butter visible at the bread
+edge. Served on a plain worn plate with a couple of thin cucumber slices pushed
+to the side, catching a slightly harsh highlight from the overhead light.
+```
+
+#### K. 西多士 ($26)
+```
+DISH: Surface / Angle: scratched brushed stainless-steel table; elevated ~45-degree
+angle.
+Hong Kong-style French toast (西多士), two thick slices of white bread
+sandwiched with peanut butter filling, deep-fried golden-brown and crispy on
+the outside, cut diagonally into triangles and stacked a little unevenly to
+show the fluffy pale interior. A generous, slightly melting pat of butter sits
+on top, golden syrup or condensed milk drizzled over it and pooling messily on
+the plate rather than in a neat line — the pool has already started spreading
+toward the plate's chipped rim.
+```
+
+#### L. 蛋撻 ($10)
+```
+DISH: Surface / Angle: red-and-cream speckled terrazzo/laminate counter; near-top-down
+~75-degree angle.
+Three freshly-baked Hong Kong egg tarts (蛋撻) on a plain well-used plate,
+golden flaky crumbly pastry shell (visible layered lamination texture at the
+edges), smooth glossy pale-yellow egg custard filling with a slight
+caramelized sheen, still slightly warm-looking. Arranged in a loose,
+not-quite-symmetrical cluster, one tart tilted to show the flaky side wall,
+a few pastry crumbs scattered naturally around them on the plate.
+```
+
+#### M. 菠蘿油 ($16)
+```
+DISH: Surface / Angle: worn honey-brown Formica tabletop; elevated ~45-degree angle.
+A pineapple bun (菠蘿包) sliced open with a thick slab of cold butter inserted
+in the middle, the butter slightly melting unevenly from the bread's warmth on
+one side. The bun top shows the signature golden-brown crackled "pineapple
+skin" crust texture (cookie-like crust with a grid crack pattern), soft white
+bread interior visible at the sides. Set a little off-center on a plain worn
+plate, a few crumbs scattered naturally around it, catching a hard fluorescent
+highlight on the crust.
+```
+
+#### N. 楊枝甘露 ($32)
+```
+DISH: Surface / Angle: scratched brushed stainless-steel table; elevated ~45-degree
+angle.
+A plain glass dessert bowl (not a dinner plate) of mango pomelo sago (楊枝甘
+露), thick creamy pale-orange mango puree base, visible chunks of fresh diced
+mango, translucent white sago pearls, and pomelo (grapefruit) sacs scattered
+unevenly on top. Chilled, with a slightly fogged/condensation-dulled glass
+exterior from the cold contents, served with a small worn spoon resting
+sideways in the bowl rather than perfectly placed.
+```
+
+#### O. 雲吞麵 ($38)
+```
+DISH: Surface / Angle: red-and-cream speckled terrazzo/laminate counter; near-top-down
+~70-degree angle.
+A bowl of Hong Kong wonton noodle soup (雲吞麵), thin springy egg noodles
+(蛋麵) coiled somewhat loosely in a clear pork-and-dried-flounder broth, 4-5
+plump shrimp wontons with visible pink shrimp through the thin wonton skin, a
+few strands of yellow chives scattered on top, served in a plain worn white
+bowl (not a plate), broth clear and steaming under the flat overhead light,
+a spoon resting against the bowl's rim rather than laid neatly beside it.
+```
+
+#### P. 牛腩麵 ($48)
+```
+DISH: Surface / Angle: worn honey-brown Formica tabletop; elevated ~45-degree angle.
+A bowl of Hong Kong beef brisket noodle soup (牛腩麵), thick uneven chunks of
+tender stewed beef brisket (some lean, some with soft connective tissue) piled
+on top of flat ho fun noodles in a rich dark brown five-spice braising broth
+that has slightly stained the inside rim of the bowl, a few sprigs of scallion
+and cilantro scattered on top, steam rising under the harsh fluorescent light,
+a faint oily sheen pooling at the broth's surface showing slow-braised
+richness rather than a styled glisten.
+```
+
+### 3. Bonus item(冇對應實際 menu item,想擴充先用)
+
+#### 常餐(Set Breakfast: Ham & Egg Sandwich + Milk Tea + Toast)
+```
+DISH: Surface / Angle: scratched brushed stainless-steel table, wider tray framing;
+elevated ~40-degree angle to fit multiple items.
+A full "set meal" (常餐) tray shot: a ham-and-fried-egg sandwich (火腿煎蛋治)
+cut diagonally in half showing the fried egg yolk and ham layer, a slice of
+Hong Kong-style toast with condensed milk or kaya on a side plate, and a cup of
+hot milk tea steaming beside it. Items arranged as if a busy waiter just set
+the tray down — not perfectly symmetrical, plates slightly overlapping, one
+plate a little closer to the frame edge than the others.
+```
+
+#### 絲襪奶茶沖茶動作(Silk-Stocking Milk Tea Pouring Action Shot)
+```
+DISH: Surface / Angle: dynamic side angle at counter height (not overhead) — a sliver
+of red-and-green checkered floor tile softly out of focus in the far
+background.
+Action shot of Hong Kong "silk stocking" milk tea being poured/pulled between
+two dented metal jugs held apart, creating a long visible stream of
+reddish-brown tea with light foam/bubbles forming, motion-frozen mid-pour,
+droplets visible in the air catching a hard fluorescent highlight. A worn
+cloth tea sock (絲襪) strainer rests on one jug's spout. NOTE: exclude
+hands/arms from frame if possible — focus on the jugs and tea stream only; if
+a hand must appear, keep it partially cropped at the frame edge, no visible
+face.
 ```
 
 ### 3. 圖片規格建議
