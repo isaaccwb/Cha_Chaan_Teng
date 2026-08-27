@@ -7,7 +7,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MenuItemCard } from "@/components/menu/menu-item-card";
 import { CartBar } from "@/components/cart/cart-drawer";
 import { emptyStateCopy } from "@/lib/copy/tone";
-import { LogoFull } from "@/components/branding/logo";
 
 /**
  * 客人落單頁 —— 單欄卡片 list + 橫向分類 chip + sticky bottom bar。
@@ -43,15 +42,11 @@ export default async function OrderPage() {
   return (
     <div className="pb-28">
       {/*
-        Cover —— 老闆提供嘅正式 logo(雄記冰室,2026-08-28),放喺落單頁最
-        當眼嘅頂位,似餐廳自己個「舖頭招牌相」。呢個用成張原圖(連埋人物
-        插畫+雄記冰室字樣+SINCE 1978),縮小版 icon 就用喺 sticky header/
-        職員後台/登入頁(見 components/branding/logo.tsx)。
+        2026-08-28 用戶反饋:成張大 logo 放呢頁頂會阻住人揀嘢食(呢度先係
+        真.落單流程,唔應該有大型非功能性內容擋住第一屏)——移除咗,大版
+        logo 改放去 app/page.tsx(網域根路徑「封面」首頁);細版 icon 就留喺
+        customer layout 個 footer(slogan 上面)做長駐 branding,唔阻流程。
       */}
-      <div className="flex justify-center pt-4">
-        <LogoFull />
-      </div>
-
       {visibleCategories.length === 0 ? (
         <p className="px-4 py-16 text-center text-[var(--muted-foreground)]">
           {emptyStateCopy.emptyCategory}
