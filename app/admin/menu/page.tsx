@@ -108,12 +108,22 @@ export default async function AdminMenuPage() {
               "use server";
               await createMenuCategory(formData);
             }}
-            className="flex gap-2"
+            className="flex flex-col gap-2"
           >
-            <Input name="name" placeholder="例如:粉麵飯" required className="flex-1" />
-            <Button type="submit" variant="secondary">
-              新增
-            </Button>
+            <div className="flex gap-2">
+              <Input
+                name="name"
+                placeholder="例如:粉麵飯"
+                required
+                pattern=".*\S.*"
+                title="唔可以淨係得空格"
+                className="flex-1"
+              />
+              <Button type="submit" variant="secondary">
+                新增
+              </Button>
+            </div>
+            <p className="text-xs text-[var(--muted-foreground)]">分類名唔可以淨係得空格</p>
           </form>
         </CardContent>
       </Card>
@@ -141,8 +151,20 @@ export default async function AdminMenuPage() {
               ))}
             </Select>
             <Input name="code" placeholder="代號(例如 A)" />
-            <Input name="name" placeholder="品名" required />
-            <Input name="price" type="number" step="0.01" min="0" placeholder="價錢" required />
+            <div className="flex flex-col gap-1">
+              <Input
+                name="name"
+                placeholder="品名"
+                required
+                pattern=".*\S.*"
+                title="品名唔可以淨係得空格"
+              />
+              <p className="text-xs text-[var(--muted-foreground)]">品名唔可以淨係得空格</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Input name="price" type="number" step="0.01" min="0" placeholder="價錢" required />
+              <p className="text-xs text-[var(--muted-foreground)]">價錢要係 0 或以上嘅數字</p>
+            </div>
             <textarea
               name="description"
               placeholder="賣點描述(俾 AI 生圖/落單頁參考)"

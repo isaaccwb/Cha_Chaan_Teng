@@ -53,9 +53,9 @@ export default async function OrderPage() {
         </p>
       ) : (
         <Tabs defaultValue={visibleCategories[0].id} className="flex flex-col gap-3 px-4 pt-3">
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="h-12 w-full justify-start overflow-x-auto">
             {visibleCategories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
+              <TabsTrigger key={category.id} value={category.id} className="px-4 py-2.5">
                 {category.name}
               </TabsTrigger>
             ))}

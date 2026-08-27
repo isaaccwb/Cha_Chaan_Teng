@@ -83,7 +83,7 @@ export function MenuItemCard({ item, badge }: MenuItemCardProps) {
                 disabled={soldOut}
                 onClick={() => setSheetOpen(true)}
                 aria-label={`加${item.name}落單`}
-                className="pointer-events-auto flex h-9 items-center gap-1 rounded-md bg-[var(--primary)] px-3 text-sm font-bold text-[var(--primary-foreground)] transition-all hover:shadow-cct-glow active:scale-[0.98] disabled:opacity-50"
+                className="pointer-events-auto flex h-10 items-center gap-1 rounded-md bg-[var(--primary)] px-3 text-sm font-bold text-[var(--primary-foreground)] transition-all hover:shadow-cct-glow active:scale-[0.98] disabled:opacity-50"
               >
                 <Plus className="h-4 w-4" />
                 加

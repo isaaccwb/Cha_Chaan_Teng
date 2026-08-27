@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
@@ -14,9 +14,15 @@ import {
   orderStatusHistory,
 } from "@/lib/db/schema";
 import { errorCopy } from "@/lib/copy/tone";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const GUEST_TOKEN_COOKIE = "cct_guest_token";
 const GUEST_TOKEN_MAX_AGE_SECONDS = 6 * 60 * 60; // 6 小時
+
+// 防止一個 tab loop 狂 call createOrder 洗版廚房 Kanban:一個 key(IP 或
+// guest_token)喺呢個 window 入面最多准落幾多次單
+const ORDER_RATE_LIMIT_MAX_REQUESTS = 5;
+const ORDER_RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000; // 2 分鐘
 
 export interface CreateOrderItemInput {
   menuItemId: string;
@@ -45,6 +51,23 @@ function round2(n: number) {
  * 產生 guest_token 寫 httpOnly cookie;revalidate 職員後台落單頁。
  */
 export async function createOrder(input: CreateOrderInput) {
+  // 越早擋越好 —— 呢個 check 冇碰過 DB,擋咗一個 loop 狂 call 嘅 tab 都唔會
+  // 洗到任何寫入成本(見 lib/rate-limit.ts 嘅 in-memory sliding window)。
+  const headerList = await headers();
+  const forwardedFor = headerList.get("x-forwarded-for");
+  const clientIp = forwardedFor?.split(",")[0]?.trim();
+  const guestTokenForRateLimit = (await cookies()).get(GUEST_TOKEN_COOKIE)?.value;
+  const rateLimitKey = clientIp || guestTokenForRateLimit;
+  if (rateLimitKey) {
+    const allowed = checkRateLimit(rateLimitKey, {
+      maxRequests: ORDER_RATE_LIMIT_MAX_REQUESTS,
+      windowMs: ORDER_RATE_LIMIT_WINDOW_MS,
+    });
+    if (!allowed) {
+      throw new Error(errorCopy.rateLimited);
+    }
+  }
+
   const restaurantId = await getCurrentRestaurantId();
 
   const tableNumber = input.tableNumber?.trim();

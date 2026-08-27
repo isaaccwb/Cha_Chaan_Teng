@@ -96,7 +96,7 @@ export function AddItemSheet({
           {item.description && <SheetDescription>{item.description}</SheetDescription>}
         </SheetHeader>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 pb-[env(safe-area-inset-bottom)]">
           {grouped.map(([groupName, options]) => (
             <div key={groupName} className="flex flex-col gap-2">
               <p className="font-[family-name:var(--font-mono-ui)] text-xs font-bold text-[var(--muted-foreground)]">
@@ -113,6 +113,7 @@ export function AddItemSheet({
                       role="button"
                       tabIndex={0}
                       data-selected={selected}
+                      className="min-h-9 px-3 py-1.5"
                       onClick={() => toggleOption(option)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -271,7 +272,7 @@ export function CartBar({
             <SheetTitle>{buttonCopy.viewCart}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 pb-[env(safe-area-inset-bottom)]">
             <ul className="flex flex-col gap-3">
               {lines.map((line) => {
                 const lineUnit = line.unitPrice + line.options.reduce((s, o) => s + o.priceDelta, 0);
@@ -318,7 +319,7 @@ export function CartBar({
                         type="button"
                         aria-label="移除"
                         onClick={() => removeItem(line.lineId)}
-                        className="text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
+                        className="flex h-9 w-9 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
                       >
                         <X className="h-4 w-4" />
                       </button>

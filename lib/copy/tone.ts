@@ -55,6 +55,12 @@ export const errorCopy = {
   missingTableNumber: "枱號都未講,坐咗喺邊度呀大佬",
   slowKitchen: "廚房好忙,唔該等多陣",
   belowMinSpend: "未夠最低消費喎,加多樣先啦",
+  rateLimited: "咦,啱啱先落過單,等陣先啦",
+  // error.tsx boundary 專用(Server Component 拋錯/連線唔穩嗰種意外),
+  // 唔好將 error.message 顯示畀客人睇,以下係統一嘅友善版文案。
+  boundaryTitle: "唔好意思,好似有啲問題",
+  boundaryDetail: "個系統好似食滯咗,唔該撳「重新整理」再試多次",
+  boundaryDetailStaff: "頁面出咗啲問題,撳「重新整理」睇吓得唔得",
 } as const;
 
 export const miscCopy = {

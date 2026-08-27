@@ -56,6 +56,19 @@ export default function EditMenuItemPage({
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
+  // 加料選項表單 —— 得靠呢兩個 state 做即時驗證,唔可以淨係靠 native
+  // `required`(擋唔到淨係得空格嗰種)同 type="number"(擋唔到 NaN 嗰種)
+  const [optionName, setOptionName] = useState("");
+  const [optionPriceDelta, setOptionPriceDelta] = useState("0");
+  const [optionTouched, setOptionTouched] = useState(false);
+  const [optionError, setOptionError] = useState<string | null>(null);
+  const [isAddingOption, setIsAddingOption] = useState(false);
+
+  const optionNameInvalid = optionName.trim() === "";
+  const optionPriceDeltaInvalid =
+    optionPriceDelta.trim() !== "" && Number.isNaN(Number(optionPriceDelta));
+  const optionFormInvalid = optionNameInvalid || optionPriceDeltaInvalid;
+
   const formRef = useRef<HTMLFormElement>(null);
   const optionFormRef = useRef<HTMLFormElement>(null);
 
@@ -100,11 +113,21 @@ export default function EditMenuItemPage({
   async function handleAddOption(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!optionFormRef.current) return;
+    setOptionTouched(true);
+    if (optionFormInvalid) return;
+    setIsAddingOption(true);
+    setOptionError(null);
     const result = await createItemOption(itemId, new FormData(optionFormRef.current));
-    if (result.success) {
-      optionFormRef.current.reset();
-      await reload();
+    setIsAddingOption(false);
+    if (!result.success) {
+      setOptionError(result.error);
+      return;
     }
+    optionFormRef.current.reset();
+    setOptionName("");
+    setOptionPriceDelta("0");
+    setOptionTouched(false);
+    await reload();
   }
 
   async function handleDeleteOption(optionId: string) {
@@ -367,17 +390,43 @@ export default function EditMenuItemPage({
                 </option>
               ))}
             </Select>
-            <Input name="name" placeholder="例如:走青" required />
-            <Input
-              name="priceDelta"
-              type="number"
-              step="0.01"
-              placeholder="加價(可負可0)"
-              defaultValue="0"
-            />
-            <Button type="submit" variant="secondary">
-              加落去
+            <div className="flex flex-col gap-1">
+              <Input
+                name="name"
+                placeholder="例如:走青"
+                required
+                value={optionName}
+                onChange={(e) => setOptionName(e.target.value)}
+                onBlur={() => setOptionTouched(true)}
+              />
+              {optionTouched && optionNameInvalid && (
+                <p className="text-xs text-[var(--destructive)]">加料名唔可以淨係得空格</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <Input
+                name="priceDelta"
+                type="number"
+                step="0.01"
+                placeholder="加價(可負可0)"
+                value={optionPriceDelta}
+                onChange={(e) => setOptionPriceDelta(e.target.value)}
+                onBlur={() => setOptionTouched(true)}
+              />
+              {optionTouched && optionPriceDeltaInvalid && (
+                <p className="text-xs text-[var(--destructive)]">加價要係數字</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={isAddingOption || (optionTouched && optionFormInvalid)}
+            >
+              {isAddingOption ? "加緊…" : "加落去"}
             </Button>
+            {optionError && (
+              <p className="text-xs text-[var(--destructive)] sm:col-span-4">{optionError}</p>
+            )}
           </form>
         </CardContent>
       </Card>
