@@ -38,6 +38,18 @@ export const MENU_CODE_TO_IMAGE_SLUG: Record<string, string> = {
   C: "set-c-yeung-chow-rice",
   D: "set-d-silver-sprout-noodles",
   E: "set-e-shrimp-fried-rice",
+  // 2026-08-27 擴充餐牌(見 drizzle/menu-data.ts)新增品項
+  F: "iced-milk-tea",
+  G: "hot-milk-tea",
+  H: "lemon-tea",
+  I: "yuenyeung",
+  J: "luncheon-meat-egg-sandwich",
+  K: "french-toast",
+  L: "egg-tart",
+  M: "pineapple-bun-butter",
+  N: "mango-pomelo-sago",
+  O: "wonton-noodle-soup",
+  P: "beef-brisket-noodle-soup",
 };
 
 export interface ResolvedDishPrompt {

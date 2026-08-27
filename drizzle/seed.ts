@@ -8,21 +8,20 @@
  * 呢個 script 冇做 idempotent 檢查 —— 淨係應該喺全新/測試環境跑一次。
  * 再跑一次會撞 restaurants.slug / domain 嘅 unique constraint 而失敗,
  * 呢個係特登嘅安全網,唔想你手多多喺已經有數據嘅 DB 度重複 seed。
+ *
+ * 已經 seed 過、想加多啲分類/品項落現有 restaurant?用
+ * `scripts/backfill-menu.ts`(idempotent,唔會撞現有數據)。
+ *
+ * 完整餐牌資料(分類/品項/加料選項)寫喺 `drizzle/menu-data.ts`,呢兩個
+ * script 共用,避免手抄兩份唔同步。
  */
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { itemOptions, menuCategories, menuItems, restaurants, staffUsers } from "@/lib/db/schema";
+import { MENU } from "@/drizzle/menu-data";
 
 const ADMIN_EMAIL = "boss@cctmenu.hk";
 const ADMIN_PLACEHOLDER_PASSWORD = "ChangeMe123!";
-
-const CLASSIC_SETS = [
-  { code: "A", name: "干炒牛河", description: "鑊氣十足,乾身唔油膩", price: "65.00" },
-  { code: "B", name: "星洲炒米", description: "咖喱香,微辣惹味", price: "60.00" },
-  { code: "C", name: "揚州炒飯", description: "粒粒分明,叉燒蝦仁樣樣齊", price: "68.00" },
-  { code: "D", name: "銀芽炒米粉", description: "清爽少油,銀芽夠爽脆", price: "55.00" },
-  { code: "E", name: "蝦仁炒飯", description: "蝦仁飽滿,鑊氣夠香", price: "70.00" },
-] as const;
 
 async function main() {
   if (!process.env.DATABASE_URL) {
@@ -47,74 +46,48 @@ async function main() {
     .returning();
   console.log(`  ✓ restaurant 開好喇:${restaurant.name} (${restaurant.id})`);
 
-  console.log("開緊分類……");
-  const [category] = await db
-    .insert(menuCategories)
-    .values({
-      restaurantId: restaurant.id,
-      name: "常餐/套餐",
-      sortOrder: 0,
-    })
-    .returning();
-  console.log(`  ✓ 分類「${category.name}」開好喇`);
-
-  console.log("落緊 5 個經典餐……");
-  const insertedItems: (typeof menuItems.$inferSelect)[] = [];
-  for (const [index, set] of CLASSIC_SETS.entries()) {
-    const [item] = await db
-      .insert(menuItems)
+  for (const [categoryIndex, category] of MENU.entries()) {
+    console.log(`開緊分類「${category.name}」……`);
+    const [insertedCategory] = await db
+      .insert(menuCategories)
       .values({
         restaurantId: restaurant.id,
-        categoryId: category.id,
-        code: set.code,
-        name: set.name,
-        description: set.description,
-        price: set.price,
-        sortOrder: index,
+        name: category.name,
+        sortOrder: categoryIndex,
       })
       .returning();
-    insertedItems.push(item);
-    console.log(`  ✓ ${set.code}餐 ${set.name} $${set.price}`);
-  }
+    console.log(`  ✓ 分類「${insertedCategory.name}」開好喇`);
 
-  console.log("掛緊套餐加價/走料選項……");
-  for (const item of insertedItems) {
-    await db.insert(itemOptions).values([
-      {
-        restaurantId: restaurant.id,
-        menuItemId: item.id,
-        groupName: "套餐飲品",
-        name: "跟套餐(+$10)",
-        priceDelta: "10.00",
-        sortOrder: 0,
-      },
-      {
-        restaurantId: restaurant.id,
-        menuItemId: item.id,
-        groupName: "套餐飲品",
-        name: "凍飲(+$6)",
-        priceDelta: "6.00",
-        sortOrder: 1,
-      },
-      {
-        restaurantId: restaurant.id,
-        menuItemId: item.id,
-        groupName: "套餐飲品",
-        name: "熱飲(+$3)",
-        priceDelta: "3.00",
-        sortOrder: 2,
-      },
-      {
-        restaurantId: restaurant.id,
-        menuItemId: item.id,
-        groupName: "走料",
-        name: "走青",
-        priceDelta: "0.00",
-        sortOrder: 3,
-      },
-    ]);
+    for (const [itemIndex, item] of category.items.entries()) {
+      const [insertedItem] = await db
+        .insert(menuItems)
+        .values({
+          restaurantId: restaurant.id,
+          categoryId: insertedCategory.id,
+          code: item.code,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          sortOrder: itemIndex,
+        })
+        .returning();
+      console.log(`  ✓ ${item.code} ${item.name} $${item.price}`);
+
+      if (item.options && item.options.length > 0) {
+        await db.insert(itemOptions).values(
+          item.options.map((option, optionIndex) => ({
+            restaurantId: restaurant.id,
+            menuItemId: insertedItem.id,
+            groupName: option.groupName,
+            name: option.name,
+            priceDelta: option.priceDelta,
+            sortOrder: optionIndex,
+          }))
+        );
+      }
+    }
   }
-  console.log("  ✓ 每個餐都掛咗跟套餐/凍飲/熱飲/走青選項");
+  console.log("  ✓ 全部分類/品項/加料選項都落好喇");
 
   console.log("開緊 admin 帳號……");
   const passwordHash = await bcrypt.hash(ADMIN_PLACEHOLDER_PASSWORD, 10);

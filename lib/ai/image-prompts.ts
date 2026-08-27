@@ -106,6 +106,55 @@ kaya/butter or condensed milk on a side plate, and a cup of hot milk tea steamin
 All items arranged naturally as if on a real breakfast tray, not perfectly symmetrical.
 `.trim(),
 
+  // ===== 2026-08-27 擴充餐牌新增品項 =====
+  "lemon-tea": `
+A tall glass of Hong Kong-style lemon tea (檸檬茶), served in the same classic
+thick clear glass as the milk tea, amber-golden tea color (lighter and more
+transparent than milk tea, no milk), 3-4 thin lemon slices floating and pressed
+against the glass wall, ice cubes visible, a thin straw, small saucer underneath,
+condensation droplets on the glass exterior. Background same wood table.
+`.trim(),
+
+  "yuenyeung": `
+A white ceramic cup of yuenyeung (鴛鴦, Hong Kong coffee-milk-tea blend), same
+classic diner cup and saucer as the hot milk tea shot, but the liquid should look
+slightly darker and more matte than pure milk tea (coffee undertone visible),
+steam rising gently, small metal teaspoon resting on the saucer beside the cup.
+`.trim(),
+
+  "luncheon-meat-egg-sandwich": `
+A classic Hong Kong luncheon meat and fried egg sandwich (餐蛋治), white sandwich
+bread lightly toasted, cut diagonally in half and stacked to show the cross-section:
+a thick slice of pan-fried luncheon meat (SPAM-style, browned crispy edges) and a
+fried egg with a slightly runny yolk peeking out, a thin smear of butter visible at
+the bread edge, crusts trimmed off. Served on the melamine plate with a few thin
+cucumber slices on the side for color contrast.
+`.trim(),
+
+  "french-toast": `
+Hong Kong-style French toast (西多士), two thick slices of white bread sandwiched
+with peanut butter filling, deep-fried golden-brown and crispy on the outside,
+cut diagonally into triangles and stacked slightly overlapping to show the fluffy
+pale interior. A generous pat of butter melting on top, golden syrup or condensed
+milk drizzled over, a small puddle of syrup pooling on the plate.
+`.trim(),
+
+  "wonton-noodle-soup": `
+A bowl of Hong Kong wonton noodle soup (雲吞麵), thin springy egg noodles (蛋麵)
+coiled neatly in a clear pork-and-dried-flounder broth, 4-5 plump shrimp wontons
+with visible pink shrimp through the thin wonton skin, a few strands of yellow
+chives on top, served in a simple white bowl (not the round plate), broth clear
+and steaming, a spoon resting beside the bowl.
+`.trim(),
+
+  "beef-brisket-noodle-soup": `
+A bowl of Hong Kong beef brisket noodle soup (牛腩麵), thick chunks of tender
+stewed beef brisket (some lean, some with soft connective tissue) piled on top of
+flat ho fun noodles in a rich dark brown five-spice braising broth, a few sprigs
+of scallion and cilantro scattered on top, served in a simple white bowl, steam
+rising, glossy sheen on the brisket showing slow-braised tenderness.
+`.trim(),
+
   "silk-stocking-milk-tea-pour": `
 Action shot of Hong Kong "silk stocking" milk tea being poured/pulled between
 two metal jugs held high apart, creating a long visible stream of reddish-brown tea
@@ -132,4 +181,10 @@ export const DISH_NAMES: Record<string, string> = {
   "mango-pomelo-sago": "楊枝甘露",
   "set-breakfast": "常餐",
   "silk-stocking-milk-tea-pour": "絲襪奶茶(沖茶動作圖)",
+  "lemon-tea": "檸檬茶",
+  "yuenyeung": "鴛鴦",
+  "luncheon-meat-egg-sandwich": "餐蛋治",
+  "french-toast": "西多士",
+  "wonton-noodle-soup": "雲吞麵",
+  "beef-brisket-noodle-soup": "牛腩麵",
 };

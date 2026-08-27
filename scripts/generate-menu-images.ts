@@ -16,9 +16,12 @@
  *   npx dotenv -e .env.local -- npm run images:generate
  * 或者直接 `export $(cat .env.local | xargs)` 之後再跑 `npm run images:generate`。
  *
- * 呢個 script 冇危險性(唔會刪嘢),但會實際計費(AI Gateway 生圖 + Blob 儲存),
- * 唔好隨手一直重複跑成套 —— 想補生單一張相用職員後台個掣(見
- * app/api/admin/menu-items/[id]/generate-image/route.ts)就夠。
+ * 呢個 script 冇危險性(唔會刪嘢),但會實際計費(AI Gateway 生圖 + Blob 儲存)。
+ * 2026-08-27 起,已經有 image_url 嘅品項會自動跳過(唔會重生),所以加咗新
+ * 品項之後可以放心對成間餐廳再跑一次,只會幫新品項生相 —— 想強制重生已有
+ * 相嘅品項,用職員後台「重新生成 AI 相片」個掣(見
+ * app/api/admin/menu-items/[id]/generate-image/route.ts)逐張補,唔好靠呢個
+ * script 成套重來。
  */
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
@@ -66,14 +69,24 @@ async function main() {
   const restaurantId = process.env.DEFAULT_RESTAURANT_ID as string;
   const db = getDb();
 
-  const items = await db.select().from(menuItems).where(eq(menuItems.restaurantId, restaurantId));
+  const allItems = await db.select().from(menuItems).where(eq(menuItems.restaurantId, restaurantId));
 
-  if (items.length === 0) {
+  if (allItems.length === 0) {
     console.log("呢間餐廳重未有任何 menu item,冇嘢好生。請先跑 `npm run db:seed`。");
     return;
   }
 
-  console.log(`搵到 ${items.length} 個 menu item,開波生相……\n`);
+  const items = allItems.filter((item) => !item.imageUrl);
+  const skipped = allItems.length - items.length;
+  if (skipped > 0) {
+    console.log(`${skipped} 個品項已經有相,自動跳過(唔會重生)。`);
+  }
+  if (items.length === 0) {
+    console.log("全部品項都已經有相,冇嘢好生。");
+    return;
+  }
+
+  console.log(`搵到 ${items.length} 個未有相嘅 menu item,開波生相……\n`);
 
   let done = 0;
   let failed = 0;

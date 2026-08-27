@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env.local drizzle/seed.ts",
+    "menu:backfill": "tsx --env-file=.env.local scripts/backfill-menu.ts",
     "images:generate": "tsx --env-file=.env.local scripts/generate-menu-images.ts"
   },
   "dependencies": {
