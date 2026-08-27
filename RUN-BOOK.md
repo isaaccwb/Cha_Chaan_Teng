@@ -148,6 +148,14 @@ vercel deploy        # preview
 vercel deploy --prod # 確認 preview 冇問題先落 prod,custom domain 會自動跟返 project
 ```
 
+> ✅ **已完成(2026-08-27)**:sandbox 依家有網絡 + `vercel` CLI 已經用
+> `isaaccwb` 身份登入,`vercel deploy` → `vercel deploy --prod` 兩步都喺
+> 呢個 session 直接跑咗。`cctmenu.isaaccheng.xyz` 已經由舊 V0 Flask app
+> (`dpl_...`,797 日前部署)切咗去 V1 Next.js(`dpl_DHrXBU2gnvhdK5gcMeVjoXFSHcEc`),
+> curl 確認 `/` 同 `/order` 都 200 同顯示正確內容。**記得盡快登入
+> `boss@cctmenu.hk`(seed 密碼 `ChangeMe123!`)去 `/admin/settings` 改
+> 密碼**——而家有真人客戶會摷到呢個 domain。
+
 ## 9. Push 去 GitHub
 
 ```bash
