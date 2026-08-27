@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LogoIcon } from "@/components/branding/logo";
 
 async function staffLogin(formData: FormData) {
   "use server";
@@ -45,10 +46,15 @@ export default async function StaffLoginPage({
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="font-[family-name:var(--font-display)] text-2xl text-[var(--cct-red-600)]">
+          <div className="mb-1 flex justify-center">
+            <LogoIcon size={64} />
+          </div>
+          <CardTitle className="text-center font-[family-name:var(--font-display)] text-2xl text-[var(--cct-red-600)]">
             開工喇
           </CardTitle>
-          <CardDescription>職員 / 老闆登入,入返你間舖嘅電郵同密碼</CardDescription>
+          <CardDescription className="text-center">
+            職員 / 老闆登入,入返你間舖嘅電郵同密碼
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={staffLogin} className="flex flex-col gap-4">

@@ -38,7 +38,7 @@ async function main() {
     .insert(restaurants)
     .values({
       slug: "cctmenu",
-      name: "常樂冰室",
+      name: "雄記冰室",
       domain: "cctmenu.isaaccheng.xyz",
       serviceChargeEnabled: false,
       minSpendAmount: null,

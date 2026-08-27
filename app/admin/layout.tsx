@@ -14,6 +14,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { LogoIcon } from "@/components/branding/logo";
 
 const NAV_ITEMS = [
   { href: "/admin/orders", label: "落單" },
@@ -39,9 +40,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <div className="flex min-h-screen flex-col lg:flex-row">
       <aside className="flex shrink-0 flex-col gap-6 border-b-[1.5px] border-[var(--border)] bg-[var(--cct-cream-100)] p-4 lg:w-56 lg:border-b-0 lg:border-r-[1.5px]">
         <div>
-          <p className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--cct-red-600)]">
-            茶記後台
-          </p>
+          <div className="flex items-center gap-2">
+            <LogoIcon size={36} />
+            <p className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--cct-red-600)]">
+              茶記後台
+            </p>
+          </div>
           <div className="cct-checker-strip mt-2 w-14" />
         </div>
 

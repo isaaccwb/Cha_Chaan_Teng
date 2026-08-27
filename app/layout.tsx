@@ -27,7 +27,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "茶記落單",
+  title: "雄記冰室 · 茶記落單",
   description: "香港茶記落單 App — 想食乜?撳幾撳就得。",
 };
 
