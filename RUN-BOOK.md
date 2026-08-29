@@ -223,7 +223,41 @@ git push -u origin v1-nextjs-rewrite   # V1 rewrite,建議開 PR 畀自己 revie
 `npm run lint` / `npm run build` 通過,`vercel deploy --prod` 完成,production
 curl 確認冇壞、cron endpoint 有 401 保護。
 
-## 12. 之後點揾我(Claude)跟進
+## 12. 訂單歷史/簡單報表 + 效能優化(2026-08-29,已完成)
+
+Phase 1 硬化之後嘅第二輪,兩件事一齊做:
+
+- **訂單歷史 + 日期範圍報表**:`app/admin/reports/page.tsx` 由「淨係得今日
+  3 個 stat card」擴展成今日/本週/本月切換(`?range=`),底下加咗分頁(20
+  單/頁)嘅訂單歷史列表(單號/時間/檯號/狀態/金額)。抽咗個共用
+  `lib/date-hk.ts` 出嚟做 HKT 日期計算(原本淨係得 today 嘅 local
+  helper),`lib/db/queries/orders.ts` 加咗 `getOrderStatsForRange` /
+  `getOrdersInRange`。`orders` 表加咗 `(restaurant_id, created_at)` 複合
+  index(`drizzle/migrations/0001_fat_selene.sql`,純加 index,已經
+  `db:migrate` 落 production,無破壞性)。
+- **效能優化**:
+  - `getMenuForRestaurant`(客人落單頁核心查詢)原本 3 條 sequential
+    query(分類/品項/加料)改用 `Promise.all` 一齊發,再用
+    `unstable_cache` 包住(tag `menu-{restaurantId}`)。`/order` 頁繼續
+    `force-dynamic`(保留「伙記改咗即刻見到」嘅正確性要求),但改成
+    「伙記真係改咗嘢先重新查 DB」而唔係「每個客人揭頁都打一次 DB」——
+    `lib/actions/menu.ts` 入面每個改 menu 嘅 mutation(分類/品項/加料
+    CRUD + toggleAvailability)都加咗 `revalidateTag` 保持資料同步。
+  - `next.config.ts` 開咗 AVIF 圖片輸出(Next 15 預設淨係 WebP)。
+  - 第一個分類最頭 2 張菜式卡加咗 `priority`(幫 LCP),其他卡照舊
+    lazy-load。
+  - 新增 `app/(customer)/order/loading.tsx` skeleton,Next.js 自動當
+    Suspense fallback,客人撳開個頁即刻見到嘢郁,唔使等成頁 DB 查完。
+
+`npm run lint` / `rm -rf .next && npm run build` 通過,`db:migrate` 完成,
+`vercel deploy --prod` 完成,production 用 `vercel curl` 確認 `/order` 同
+`/admin/reports?range=week` 都正常render 出真實資料(訂單歷史列表、狀態
+badge、金額格式都啱)。
+
+密碼變更(seed admin `boss@cctmenu.hk` / `ChangeMe123!`)用戶明確要求
+暫時唔改,唔係漏咗。
+
+## 13. 之後點揾我(Claude)跟進
 
 跑完呢份 RUN-BOOK 之後,將遇到嘅 build/runtime 錯誤原文貼返俾我,我可以喺
 呢個 sandbox 直接改 code(淨係唔可以幫你跑 `npm`/`vercel`/`git push` 呢類
