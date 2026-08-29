@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
         hostname: "*.public.blob.vercel-storage.com",
       },
     ],
+    // 餐牌成頁都係食物相,AVIF 支援嘅瀏覽器可以再細幾成 payload(Next 15 預設淨係 WebP)
+    formats: ["image/avif", "image/webp"],
   },
 };
 

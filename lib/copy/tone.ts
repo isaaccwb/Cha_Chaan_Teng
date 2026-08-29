@@ -28,6 +28,7 @@ export const emptyStateCopy = {
   emptyCart: "個底重未夠喎,快啲揀嘢先啦",
   emptyCategory: "呢頁重未開飯,睇吓第樣先",
   noOrdersToday: "今日重靜英英,未有客到",
+  noOrdersInRange: "呢段時間重未有單,揀返其他日子試吓",
   searchNoResult: "揾唔到喎,係咪打錯字?定係我哋未有呢味",
 } as const;
 
@@ -68,6 +69,7 @@ export const miscCopy = {
   drinkSectionTitle: "熱定凍?",
   modifierSectionTitle: "要點呀?",
   staffDailySummary: (count: number) => `今日賣咗 ${count} 碗,數得計`,
+  staffRangeSummary: (rangeLabel: string, count: number) => `${rangeLabel}賣咗 ${count} 碗,數得計`,
   footerNote: "唔該幫襯,慢慢揀,唔使急",
 } as const;
 

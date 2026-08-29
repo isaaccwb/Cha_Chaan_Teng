@@ -1,0 +1,1 @@
+CREATE INDEX "idx_orders_restaurant_created" ON "orders" USING btree ("restaurant_id","created_at");

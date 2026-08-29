@@ -20,9 +20,11 @@ export type MenuItemWithOptions = MenuItem & { options: ItemOption[] };
 export interface MenuItemCardProps {
   item: MenuItemWithOptions;
   badge?: "hot" | "chef" | "soup";
+  /** 淨係俾預設打開嗰個分類最頭幾張卡用,幫個 LCP 相唔使等 lazy-load 先觸發 */
+  priority?: boolean;
 }
 
-export function MenuItemCard({ item, badge }: MenuItemCardProps) {
+export function MenuItemCard({ item, badge, priority }: MenuItemCardProps) {
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const soldOut = !item.isAvailable;
 
@@ -40,6 +42,7 @@ export function MenuItemCard({ item, badge }: MenuItemCardProps) {
                 alt={item.name}
                 fill
                 sizes="96px"
+                priority={priority}
                 className="object-cover sepia-[0.08]"
               />
             ) : (

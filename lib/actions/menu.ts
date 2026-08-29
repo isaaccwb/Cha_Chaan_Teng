@@ -16,7 +16,7 @@
  */
 
 import { and, asc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import {
   itemOptions,
@@ -27,6 +27,7 @@ import {
 } from "@/lib/db/schema";
 import { requireStaffRole } from "@/lib/auth";
 import { getCurrentRestaurantId } from "@/lib/tenant";
+import { menuCacheTag } from "@/lib/db/queries/menu";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 export type OptionGroup = (typeof optionGroupEnum.enumValues)[number];
@@ -42,6 +43,7 @@ export async function createMenuCategory(formData: FormData): Promise<ActionResu
   const db = getDb();
   await db.insert(menuCategories).values({ restaurantId, name });
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
@@ -50,20 +52,24 @@ export async function updateMenuCategory(
   formData: FormData
 ): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { success: false, error: "分類名唔可以空白" };
 
   const db = getDb();
   await db.update(menuCategories).set({ name }).where(eq(menuCategories.id, categoryId));
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
 export async function deleteMenuCategory(categoryId: string): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const db = getDb();
   await db.delete(menuCategories).where(eq(menuCategories.id, categoryId));
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
@@ -107,11 +113,13 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
   const db = getDb();
   await db.insert(menuItems).values({ restaurantId, ...parsed.data });
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
 export async function updateMenuItem(itemId: string, formData: FormData): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const parsed = parseItemForm(formData);
   if (!parsed.ok) return { success: false, error: parsed.error };
 
@@ -122,20 +130,24 @@ export async function updateMenuItem(itemId: string, formData: FormData): Promis
     .where(eq(menuItems.id, itemId));
   revalidatePath("/admin/menu");
   revalidatePath(`/admin/menu/${itemId}/edit`);
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
 export async function deleteMenuItem(itemId: string): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const db = getDb();
   await db.delete(menuItems).where(eq(menuItems.id, itemId));
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
 /** 有貨/賣晒 toggle —— 老闆後台最當眼、最常撳嘅掣 */
 export async function toggleAvailability(itemId: string): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const db = getDb();
 
   const [item] = await db
@@ -152,6 +164,7 @@ export async function toggleAvailability(itemId: string): Promise<ActionResult> 
 
   revalidatePath("/admin/menu");
   revalidatePath(`/admin/menu/${itemId}/edit`);
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
@@ -216,6 +229,7 @@ export async function createItemOption(itemId: string, formData: FormData): Prom
   await db.insert(itemOptions).values({ restaurantId, menuItemId: itemId, ...parsed.data });
   revalidatePath(`/admin/menu/${itemId}/edit`);
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
@@ -224,20 +238,24 @@ export async function updateItemOption(
   formData: FormData
 ): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const parsed = parseOptionForm(formData);
   if (!parsed.ok) return { success: false, error: parsed.error };
 
   const db = getDb();
   await db.update(itemOptions).set(parsed.data).where(eq(itemOptions.id, optionId));
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 
 export async function deleteItemOption(optionId: string): Promise<ActionResult> {
   await requireStaffRole(["admin"]);
+  const restaurantId = await getCurrentRestaurantId();
   const db = getDb();
   await db.delete(itemOptions).where(eq(itemOptions.id, optionId));
   revalidatePath("/admin/menu");
+  revalidateTag(menuCacheTag(restaurantId));
   return { success: true };
 }
 

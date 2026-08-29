@@ -1,72 +1,100 @@
 /**
- * 銷售報表 —— 大數字 stat cards 行先(今日單數/今日營業額/熱賣Top3)。
+ * 銷售報表 —— 大數字 stat cards 行先(今日/本週/本月單數/營業額/熱賣Top3),
+ * 底下加「訂單歷史」分頁列表,俾老闆/伙記查返舊單。
  * 對應 docs/PROJECT_PLAN.md 〈三、UI/美術方向 §5.2〉。
  *
- * 邏輯夠簡單,直接喺呢個 page.tsx 用 getDb() 做 aggregate query,
- * 唔使起獨立 lib/db/queries/reports.ts(對應任務指示)。
+ * 邏輯夠簡單,直接喺呢個 page.tsx 用 aggregate query,唔使起獨立
+ * lib/db/queries/reports.ts —— 但 aggregate/分頁 query 本身抽咗去
+ * lib/db/queries/orders.ts(getOrderStatsForRange / getOrdersInRange),
+ * 淨係頁面組裝邏輯留喺呢度,因為呢兩個 query 同 getOrdersByStatus 屬於
+ * 同一組「orders 表查詢」,擺埋一齊易搵過另開新檔案。
+ *
+ * 範圍切換(今日/本週/本月)用 searchParams(?range=),歷史列表分頁用
+ * ?page=,一律 Link 帶參數,唔使 client component/JS —— 呢頁本身就唔係
+ * 高頻互動頁,server component + 靜態連結夠晒用。
  */
-import { and, eq, gte, inArray } from "drizzle-orm";
-import { getDb } from "@/lib/db";
-import { orderItems, orders } from "@/lib/db/schema";
+import Link from "next/link";
+import {
+  getOrderStatsForRange,
+  getOrdersInRange,
+} from "@/lib/db/queries/orders";
 import { getCurrentRestaurantId } from "@/lib/tenant";
+import { getReportRangeBounds, REPORT_RANGE_LABELS, type ReportRange } from "@/lib/date-hk";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatHKD } from "@/lib/utils";
+import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { formatHKD, cn } from "@/lib/utils";
 import { emptyStateCopy, miscCopy } from "@/lib/copy/tone";
 
 export const dynamic = "force-dynamic";
 
-/** 香港冇日光節約時間,UTC+8 寫死就夠,計返今日凌晨 0 點(HKT)嘅 UTC 時間 */
-function hongKongTodayStart(): Date {
-  const HK_OFFSET_MS = 8 * 60 * 60 * 1000;
-  const hkNow = new Date(Date.now() + HK_OFFSET_MS);
-  const hkMidnightUtcMs =
-    Date.UTC(hkNow.getUTCFullYear(), hkNow.getUTCMonth(), hkNow.getUTCDate()) - HK_OFFSET_MS;
-  return new Date(hkMidnightUtcMs);
+const PAGE_SIZE = 20;
+const RANGES: ReportRange[] = ["today", "week", "month"];
+
+function isReportRange(value: string | undefined): value is ReportRange {
+  return !!value && (RANGES as string[]).includes(value);
 }
 
-export default async function AdminReportsPage() {
+function formatDateTime(date: Date): string {
+  const hkMs = date.getTime() + 8 * 60 * 60 * 1000;
+  const hk = new Date(hkMs);
+  const mm = String(hk.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(hk.getUTCDate()).padStart(2, "0");
+  const hh = String(hk.getUTCHours()).padStart(2, "0");
+  const min = String(hk.getUTCMinutes()).padStart(2, "0");
+  return `${mm}/${dd} ${hh}:${min}`;
+}
+
+export default async function AdminReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  const range: ReportRange = isReportRange(params.range) ? params.range : "today";
+  const page = Math.max(1, Number(params.page) || 1);
+
   const restaurantId = await getCurrentRestaurantId();
-  const db = getDb();
-  const todayStart = hongKongTodayStart();
+  const { start, end } = getReportRangeBounds(range);
 
-  const todaysOrders = await db
-    .select()
-    .from(orders)
-    .where(and(eq(orders.restaurantId, restaurantId), gte(orders.createdAt, todayStart)));
+  const [{ orderCount, revenue, topItems }, { orders: historyOrders, total }] = await Promise.all([
+    getOrderStatsForRange(restaurantId, start, end),
+    getOrdersInRange(restaurantId, start, end, { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
+  ]);
 
-  const activeOrders = todaysOrders.filter((o) => o.status !== "cancelled");
-  const orderCount = todaysOrders.length;
-  const revenue = activeOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-  const activeOrderIds = activeOrders.map((o) => o.id);
-  const items = activeOrderIds.length
-    ? await db.select().from(orderItems).where(inArray(orderItems.orderId, activeOrderIds))
-    : [];
-
-  const salesByItem = new Map<string, number>();
-  for (const item of items) {
-    salesByItem.set(item.itemNameSnapshot, (salesByItem.get(item.itemNameSnapshot) ?? 0) + item.quantity);
-  }
-  const top3 = [...salesByItem.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeLabel = REPORT_RANGE_LABELS[range];
 
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">
-          今日數得計
-        </h1>
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">今日數得計</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
-          {miscCopy.staffDailySummary(orderCount)}
+          {miscCopy.staffRangeSummary(rangeLabel, orderCount)}
         </p>
       </header>
+
+      <div className="flex gap-2">
+        {RANGES.map((r) => (
+          <Link
+            key={r}
+            href={`/admin/reports?range=${r}`}
+            className={cn(
+              "rounded-md border-[1.5px] px-4 py-2 text-sm font-medium transition-colors",
+              r === range
+                ? "border-[var(--cct-red-600)] bg-[var(--cct-red-600)] text-white"
+                : "border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]"
+            )}
+          >
+            {REPORT_RANGE_LABELS[r]}
+          </Link>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-[var(--muted-foreground)]">
-              今日單數
+              {rangeLabel}單數
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -79,7 +107,7 @@ export default async function AdminReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-[var(--muted-foreground)]">
-              今日營業額
+              {rangeLabel}營業額
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -96,11 +124,11 @@ export default async function AdminReportsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {top3.length === 0 ? (
+            {topItems.length === 0 ? (
               <p className="text-sm text-[var(--muted-foreground)]">{emptyStateCopy.noOrdersToday}</p>
             ) : (
               <ol className="flex flex-col gap-1.5 text-sm">
-                {top3.map(([name, qty], idx) => (
+                {topItems.map(([name, qty], idx) => (
                   <li key={name} className="flex items-center justify-between gap-2">
                     <span>
                       {idx + 1}. {name}
@@ -115,6 +143,74 @@ export default async function AdminReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>訂單歷史</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {historyOrders.length === 0 ? (
+            <p className="text-sm text-[var(--muted-foreground)]">{emptyStateCopy.noOrdersInRange}</p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2">
+                {historyOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border-[1.5px] border-[var(--border)] p-3 text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-[family-name:var(--font-mono-ui)] font-bold">
+                        #{order.orderNumber}
+                      </span>
+                      <span className="text-[var(--muted-foreground)]">
+                        {formatDateTime(order.createdAt)}
+                      </span>
+                      {order.tableNumber && (
+                        <span className="text-[var(--muted-foreground)]">檯 {order.tableNumber}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <OrderStatusBadge status={order.status} />
+                      <span className="font-[family-name:var(--font-mono-ui)] font-bold text-[var(--cct-red-600)]">
+                        {formatHKD(order.total)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <Link
+                    href={`/admin/reports?range=${range}&page=${page - 1}`}
+                    aria-disabled={page <= 1}
+                    className={cn(
+                      "rounded-md border-[1.5px] border-[var(--border)] px-3 py-1.5",
+                      page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-[var(--muted)]"
+                    )}
+                  >
+                    上一頁
+                  </Link>
+                  <span className="text-[var(--muted-foreground)]">
+                    第 {page} / {totalPages} 頁(共 {total} 張單)
+                  </span>
+                  <Link
+                    href={`/admin/reports?range=${range}&page=${page + 1}`}
+                    aria-disabled={page >= totalPages}
+                    className={cn(
+                      "rounded-md border-[1.5px] border-[var(--border)] px-3 py-1.5",
+                      page >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-[var(--muted)]"
+                    )}
+                  >
+                    下一頁
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -61,10 +61,15 @@ export default async function OrderPage() {
             ))}
           </TabsList>
 
-          {visibleCategories.map((category) => (
+          {visibleCategories.map((category, categoryIdx) => (
             <TabsContent key={category.id} value={category.id} className="mt-1 flex flex-col gap-3">
-              {category.items.map((item) => (
-                <MenuItemCard key={item.id} item={item} />
+              {category.items.map((item, itemIdx) => (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  // 淨係第一個分類(預設打開嗰個)最頭 2 張卡幫手 LCP,其他一律照舊 lazy-load
+                  priority={categoryIdx === 0 && itemIdx < 2}
+                />
               ))}
             </TabsContent>
           ))}

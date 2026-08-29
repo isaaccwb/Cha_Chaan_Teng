@@ -170,6 +170,8 @@ export const orders = pgTable(
   (table) => [
     index("idx_orders_restaurant_status").on(table.restaurantId, table.status),
     index("idx_orders_guest_token").on(table.guestToken),
+    // 訂單歷史/報表要按日期範圍查(今日/本週/本月),加呢個複合 index 避免掃全表
+    index("idx_orders_restaurant_created").on(table.restaurantId, table.createdAt),
   ]
 );
 
